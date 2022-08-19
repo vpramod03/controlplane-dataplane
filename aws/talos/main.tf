@@ -114,6 +114,10 @@ resource "aws_instance" talos_master_instance {
 
     depends_on = [ data.local_file.controllerfile ]
 
+    metadata_options {
+       http_tokens = "required"
+    }
+
     tags = {
        Name = "talosmaster"
     }
@@ -135,6 +139,10 @@ resource "aws_instance" talos_worker_instance {
     associate_public_ip_address = false
 
     depends_on = [ data.local_file.workerfile ]
+
+    metadata_options {
+       http_tokens = "required"
+    }
 
     tags = {
        Name = "talosworker"
