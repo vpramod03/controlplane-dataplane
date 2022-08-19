@@ -19,7 +19,7 @@ done
 if ! command -v talosctl &> /dev/null
 then
     echo "Installing talos cli"
-    curl -Lo /usr/local/bin/talosctl https://github.com/siderolabs/talos/releases/download/v1.1.1/talosctl-$(uname -s | tr "[:upper:]" "[:lower:]")-amd64
+    curl -Lo /usr/local/bin/talosctl https://github.com/siderolabs/talos/releases/download/v1.1.1/talosctl-"$(uname -s | tr "[:upper:]" "[:lower:]")"-amd64
     chmod +x /usr/local/bin/talosctl
 else
     echo "talosctl is already installed skipping.."
