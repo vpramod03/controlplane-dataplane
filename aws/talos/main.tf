@@ -28,7 +28,7 @@ module "vpc" {
 }
 
 resource "aws_internet_gateway" "ig" {
-  vpc_id = "${module.vpc.vpc_id}"
+  vpc_id = module.vpc.vpc_id
   tags = {
     Name        = "${var.vpcname}-igw"
   }
@@ -74,7 +74,7 @@ module "alb" {
 
   vpc_id = module.vpc.vpc_id
 
-  subnets = [ "${element(module.vpc.private_subnets, 0)}","${element(module.vpc.private_subnets, 1)}" ]
+  subnets = [ element(module.vpc.private_subnets, 0),element(module.vpc.private_subnets, 1) ]
 
 }
 
@@ -107,7 +107,7 @@ resource "aws_instance" talos_master_instance {
     instance_type = var.instance_type
     monitoring  = var.nodemonitoringenabled
     vpc_security_group_ids = [ module.security_group.security_group_id ]
-    subnet_id              = "${element(module.vpc.private_subnets, 0)}"
+    subnet_id              = element(module.vpc.private_subnets, 0)
 
     user_data = data.local_file.controllerfile.content
     associate_public_ip_address = true
@@ -129,7 +129,7 @@ resource "aws_instance" talos_worker_instance {
     instance_type = var.instance_type
     monitoring  = var.nodemonitoringenabled
     vpc_security_group_ids = [ module.security_group.security_group_id ]
-    subnet_id              = "${element(module.vpc.private_subnets, 0)}"
+    subnet_id              = element(module.vpc.private_subnets, 0)
 
     user_data = data.local_file.workerfile.content
     associate_public_ip_address = false
@@ -158,7 +158,7 @@ resource "aws_lb_target_group_attachment" "registertarget" {
 
     count = var.mastercount
     target_group_arn = aws_lb_target_group.talos-tg.arn
-    target_id = "${element(split(",", join(",", aws_instance.talos_master_instance.*.private_ip)), count.index)}" 
+    target_id = element(split(",", join(",", aws_instance.talos_master_instance.*.private_ip)), count.index)
     depends_on = [ aws_instance.talos_master_instance ]  
 
 }
@@ -167,7 +167,7 @@ resource "aws_lb_target_group_attachment" "registertarget" {
 resource "aws_alb_listener" "talos-listener" {
     load_balancer_arn = module.alb.lb_arn
     port = 443
-    protocol = "TCP"
+    protocol = "HTTPS"
     default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.talos-tg.arn
