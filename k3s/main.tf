@@ -22,20 +22,39 @@ data "aws_ami" "amazonlinux"{
 data "template_cloudinit_config" "server" {
     content_type = "text/x-shellscript"
     content = templatefile("${path.module}/scripts/server_install.sh", {
-      k3s_token                 = var.k3s_token,
+      K3S_TOKEN                 = var.k3s_token,
       is_k3s_server             = true,
       k3s_url                   = aws_lb.k3s_server.dns_name,
-      k3s_tls_san               = aws_lb.k3s_server.dns_name
+      k3s_tls_san               = aws_lb.k3s_server.dns_name,
+      k3sdbuser                 = var.k3sdbuser,
+      k3sdbpwd                  = var.k3sdbpwd,
+      k3sdbip                   = aws_db_instance.default.endpoint,
+      k3sdbname                 = "k3sdb"
     })
   
 }
 
+#Worker initialization script 
+data "template_cloudinit_config" "add_master" {
+    content_type = "text/x-shellscript"
+    content = templatefile("${path.module}/scripts/worker_install.sh", {
+      K3S_TOKEN                 = var.k3s_token,
+      is_k3s_server             = true,
+      k3s_url                   = aws_lb.k3s_worker.dns_name,
+      k3s_tls_san               = aws_lb.k3s_worker.dns_name,
+      k3sdbuser                 = var.k3sdbuser,
+      k3sdbpwd                  = var.k3sdbpwd,
+      k3sdbip                   = aws_db_instance.default.endpoint,
+      k3sdbname                 = "k3sdb"
+    })
+  
+}
 
 #Worker initialization script 
 data "template_cloudinit_config" "worker" {
     content_type = "text/x-shellscript"
     content = templatefile("${path.module}/scripts/worker_install.sh", {
-      k3s_token                 = var.k3s_token,
+      K3S_TOKEN                 = var.k3s_token,
       is_k3s_server             = false,
       k3s_url                   = aws_lb.k3s_worker.dns_name,
       k3s_tls_san               = aws_lb.k3s_worker.dns_name
@@ -117,11 +136,22 @@ resource "aws_lb" "k3s_worker" {
   
 }
 
+resource "aws_db_instance" "default" {
+  allocated_storage    = 10
+  db_name              = "k3sdb"
+  engine               = "mysql"
+  engine_version       = "5.7"
+  instance_class       = "db.t3.micro"
+  username             = var.k3sdbuser
+  password             = var.k3sdbpwd
+  parameter_group_name = "default.mysql5.7"
+  skip_final_snapshot  = true
+}
 
 #Initializing k3s master instances
 resource "aws_instance" k3s_master_instance {
 
-    count = var.mastercount
+    count = 1
 
     ami = data.aws_ami.amazonlinux.id
     instance_type = var.instance_type
@@ -130,6 +160,30 @@ resource "aws_instance" k3s_master_instance {
     subnet_id              = element(module.vpc.private_subnets, 0)
 
     user_data = data.template_cloudinit_config.server.rendered
+    associate_public_ip_address = true
+
+    metadata_options {
+       http_tokens = "required"
+    }
+
+    tags = {
+       Name = "k3s-server"
+    }
+
+
+}
+
+resource "aws_instance" k3s_master_add_instance {
+
+    count = var.mastercount-1
+
+    ami = data.aws_ami.amazonlinux.id
+    instance_type = var.instance_type
+    monitoring  = var.nodemonitoringenabled
+    vpc_security_group_ids = [ module.security_group.security_group_id ]
+    subnet_id              = element(module.vpc.private_subnets, 0)
+
+    user_data = data.template_cloudinit_config.add_master.rendered
     associate_public_ip_address = true
 
     metadata_options {
