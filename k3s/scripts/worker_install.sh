@@ -8,6 +8,6 @@ then
     echo " K3s Installed "
 else 
     echo " Installing k3s Worker "
-    curl -sfL https://get.k3s.io | K3S_URL=${k3s_url} K3S_TOKEN=${k3s_token} sh - 
+    curl -sfL https://get.k3s.io | K3S_URL=${k3s_url} K3S_TOKEN=${K3S_TOKEN} sh - 
     echo " K3s Installed "
 fi

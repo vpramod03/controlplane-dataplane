@@ -1,4 +1,4 @@
-export k3s_token = "SECRET"
+#export k3s_token = "SECRET"
 export s3_config_file_path = "/usr/bin/s3cfg"
 export bucket_name = "intelops_k3s"
 echo " Installing K3s Master "
