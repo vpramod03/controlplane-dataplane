@@ -1,2 +1,2 @@
 # controlplane-dataplane
-TalOS cluster setup for control-plane &amp; data-plane on different cloud providers and on-premise
+TalOS or K3s cluster setup for control-plane & data-plane on different cloud providers and on-premise
