@@ -1,0 +1,12 @@
+AWS_ACCESS_KEY =
+AWS_SECRET_KEY =
+albname =
+privatesubnet =
+region =
+securitygroupname =
+vpccidr =
+vpcname =
+instance_type = 
+nodemonitoringenabled =
+mastercount = 
+workercount = 
