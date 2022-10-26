@@ -4,8 +4,7 @@
 This is a SaaS Solution which installs k3s based on inputs on top of aws. 
 
 ## Architecture
-
-![alt text](aws-k3s-arch.PNG "architecture")
+![image](https://user-images.githubusercontent.com/110480433/198113277-1cd24a3f-b55f-48ad-bad9-b8e7358c0bcf.png)
 
 ## Description
 
