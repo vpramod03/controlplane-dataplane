@@ -8,5 +8,5 @@ vpccidr =
 vpcname =
 instance_type = 
 nodemonitoringenabled =
-mastercount = 
-workercount = 
+mastercount = 3
+workercount =
