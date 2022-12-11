@@ -1,0 +1,12 @@
+AWS_ACCESS_KEY = ""
+AWS_SECRET_KEY = ""
+albname = "talosalb"
+privatesubnet = "10.0.1.0/24"
+region = "us-west-1"
+securitygroupname = "talossg"
+vpccidr = "10.0.0.0/16"
+vpcname = "talosvpc"
+instance_type = "t3.small"
+nodemonitoringenabled = "false"
+mastercount = 3
+workercount = 3
