@@ -1,0 +1,41 @@
+version: v1alpha1
+debug: false
+persist: true
+machine:
+    type: worker
+    token: bz4dqv.tf8l78efhakz3wxu
+    ca:
+        crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJQekNCOHFBREFnRUNBaEVBbm83Ui9HUnhtRGVDTlB2Y3lWMTlVREFGQmdNclpYQXdFREVPTUF3R0ExVUUKQ2hNRmRHRnNiM013SGhjTk1qTXdNVEl5TVRVd09UTTBXaGNOTXpNd01URTVNVFV3T1RNMFdqQVFNUTR3REFZRApWUVFLRXdWMFlXeHZjekFxTUFVR0F5dGxjQU1oQU1pSER1QXR5R08yV2J6QmVLeXRtSWtpNlNGWFZIUjNkWVJSCmM4VU9CbWJpbzJFd1h6QU9CZ05WSFE4QkFmOEVCQU1DQW9Rd0hRWURWUjBsQkJZd0ZBWUlLd1lCQlFVSEF3RUcKQ0NzR0FRVUZCd01DTUE4R0ExVWRFd0VCL3dRRk1BTUJBZjh3SFFZRFZSME9CQllFRkxCMTYwR1VCMVFIb0RNaApJTU9LZUxTb0xHcHRNQVVHQXl0bGNBTkJBT2hoMDFXQ2E5QTZGOWNHV29RQ2xma0xqTnFJR01IQ2F6UTlkTnBvCmVROXNmbVErNkRhbklHbTl2THZHdlMxKzJQNzlJUE9vV3pZbldVK3Y3MG00MEF3PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+        key: ""
+    certSANs: []
+    kubelet:
+        image: ghcr.io/siderolabs/kubelet:v1.24.2
+    network: {}
+    install:
+        disk: /dev/sda
+        image: ghcr.io/siderolabs/installer:v1.1.1
+        bootloader: true
+        wipe: false
+    features:
+        rbac: true
+cluster:
+    id: yEawz8mN3_tlUIr3cbrxQcjsEN7XBLinNqecfZZYfmI=
+    secret: SAnpOmaqcjzDBOp0doCYarmLOZ6JZWwvfrTH19kgQv8=
+    controlPlane:
+        endpoint: https://talosalb-dd32977ffa789a3c.elb.us-west-1.amazonaws.com:443
+    network:
+        dnsDomain: cluster.local
+        podSubnets:
+            - 10.244.0.0/16
+        serviceSubnets:
+            - 10.96.0.0/12
+    token: qluiz2.x0n0yf76g8cs2leg
+    aescbcEncryptionSecret: ""
+    ca:
+        crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJpakNDQVRDZ0F3SUJBZ0lSQUxZUFJHcERxSHdQZUo5aThIQlpUeDR3Q2dZSUtvWkl6ajBFQXdJd0ZURVQKTUJFR0ExVUVDaE1LYTNWaVpYSnVaWFJsY3pBZUZ3MHlNekF4TWpJeE5UQTVNelJhRncwek16QXhNVGt4TlRBNQpNelJhTUJVeEV6QVJCZ05WQkFvVENtdDFZbVZ5Ym1WMFpYTXdXVEFUQmdjcWhrak9QUUlCQmdncWhrak9QUU1CCkJ3TkNBQVIwbnNQTHlkUWVaWXBEVUxUa1NWWEs1WkFNY2c5OWo5TnM4N2M5dnZQbGJxQTYxZndIVVJiL2Npd2QKWFliZGtDcitobi9Ydmx5Z25aMGFrT0JMd0pUeG8yRXdYekFPQmdOVkhROEJBZjhFQkFNQ0FvUXdIUVlEVlIwbApCQll3RkFZSUt3WUJCUVVIQXdFR0NDc0dBUVVGQndNQ01BOEdBMVVkRXdFQi93UUZNQU1CQWY4d0hRWURWUjBPCkJCWUVGQkVEUnpRSSs1TCtaVS9Xam1aV3NYMElMRVoyTUFvR0NDcUdTTTQ5QkFNQ0EwZ0FNRVVDSVFEK0ZlaTQKODlFUDFVWFhZeDBidkxhNFIyeTgyS3ZhUFM0TVNyRkxDKzBnWXdJZ1pPeWhtbmN4NmNFV0xDZ0wxVjVBRkJVcApiVGVqcGRBQzhtdHpIdFlpUDJnPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+        key: ""
+    discovery:
+        enabled: true
+        registries:
+            kubernetes: {}
+            service: {}
