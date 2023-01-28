@@ -6,7 +6,7 @@ provider "aws" {
 
 data "aws_ami" "talos"{
     most_recent = true
-    name_regex = "^talos-v1.1.1-ap-south-1*"
+    name_regex = "^talos-v1.1.1*"
     owners = ["540036508848"]
 
     filter {
@@ -15,6 +15,7 @@ data "aws_ami" "talos"{
     }
 
 }
+
 
 module "vpc" {
     source  = "terraform-aws-modules/vpc/aws"
@@ -28,12 +29,11 @@ module "vpc" {
 }
 
 resource "aws_internet_gateway" "ig" {
-  vpc_id = module.vpc.vpc_id
+  vpc_id = "${module.vpc.vpc_id}"
   tags = {
     Name        = "${var.vpcname}-igw"
   }
 } 
-
 
 resource "aws_route" "igwroute" {
   route_table_id = module.vpc.vpc_main_route_table_id
@@ -56,14 +56,11 @@ module "security_group" {
 
 
     ingress_cidr_blocks = ["0.0.0.0/0"]
-    ingress_rules       = [ "k8s-apiserver" ]
-
-    rules = { "k8s-apiserver" : [ 6443 , 6443 , "tcp" , "Apiserver" ] , "all-all": [ -1, -1, "icmp", "All protocols" ]}
-
+    ingress_rules       = ["http-80-tcp", "all-all"]
+    
     egress_rules        = ["all-all"]
 
 }
-
 
 module "alb" {
   source  = "terraform-aws-modules/alb/aws"
@@ -74,9 +71,10 @@ module "alb" {
 
   vpc_id = module.vpc.vpc_id
 
-  subnets = [ element(module.vpc.private_subnets, 0),element(module.vpc.private_subnets, 1) ]
+  subnets = [ "${element(module.vpc.private_subnets, 0)}","${element(module.vpc.private_subnets, 1)}" ]
 
 }
+
 
 resource "null_resource" "createtalosconfig" {
     provisioner "local-exec" {
@@ -107,16 +105,12 @@ resource "aws_instance" talos_master_instance {
     instance_type = var.instance_type
     monitoring  = var.nodemonitoringenabled
     vpc_security_group_ids = [ module.security_group.security_group_id ]
-    subnet_id              = element(module.vpc.private_subnets, 0)
+    subnet_id              = "${element(module.vpc.private_subnets, 0)}"
 
     user_data = data.local_file.controllerfile.content
     associate_public_ip_address = true
 
     depends_on = [ data.local_file.controllerfile ]
-
-    metadata_options {
-       http_tokens = "required"
-    }
 
     tags = {
        Name = "talosmaster"
@@ -124,7 +118,6 @@ resource "aws_instance" talos_master_instance {
 
 
 }
-
 resource "aws_instance" talos_worker_instance {
     
     count = var.workercount
@@ -133,16 +126,12 @@ resource "aws_instance" talos_worker_instance {
     instance_type = var.instance_type
     monitoring  = var.nodemonitoringenabled
     vpc_security_group_ids = [ module.security_group.security_group_id ]
-    subnet_id              = element(module.vpc.private_subnets, 0)
+    subnet_id              = "${element(module.vpc.private_subnets, 0)}"
 
     user_data = data.local_file.workerfile.content
-    associate_public_ip_address = false
+    associate_public_ip_address = true
 
     depends_on = [ data.local_file.workerfile ]
-
-    metadata_options {
-       http_tokens = "required"
-    }
 
     tags = {
        Name = "talosworker"
@@ -161,12 +150,11 @@ resource "aws_lb_target_group" "talos-tg" {
   
 }
 
-
 resource "aws_lb_target_group_attachment" "registertarget" {
 
     count = var.mastercount
     target_group_arn = aws_lb_target_group.talos-tg.arn
-    target_id = element(split(",", join(",", aws_instance.talos_master_instance.*.private_ip)), count.index)
+    target_id = "${element(split(",", join(",", aws_instance.talos_master_instance.*.private_ip)), count.index)}" 
     depends_on = [ aws_instance.talos_master_instance ]  
 
 }
@@ -175,7 +163,7 @@ resource "aws_lb_target_group_attachment" "registertarget" {
 resource "aws_alb_listener" "talos-listener" {
     load_balancer_arn = module.alb.lb_arn
     port = 443
-    protocol = "HTTPS"
+    protocol = "TCP"
     default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.talos-tg.arn
@@ -185,8 +173,19 @@ resource "aws_alb_listener" "talos-listener" {
 
 resource "null_resource" "bootstrap_etcd" {
     provisioner "local-exec" {
-        command = "/bin/bash scripts/bootstrapetcd.sh ${aws_instance.talos_master_instance.0.public_ip}"
+        command = "./talosctl  --talosconfig scripts/talosconfig config endpoint ${aws_instance.talos_master_instance.0.public_ip}"
       
+    }
+    provisioner "local-exec" {
+        command = "./talosctl  --talosconfig scripts/talosconfig config node ${aws_instance.talos_master_instance.0.public_ip}"
+
+    }
+    provisioner "local-exec" {
+        command = "sleep 60; ./talosctl --talosconfig scripts/talosconfig bootstrap"
+    }
+
+    provisioner "local-exec" {
+        command = "./talosctl --talosconfig scripts/talosconfig kubeconfig ."
     }
     depends_on = [ aws_instance.talos_master_instance ]
 
