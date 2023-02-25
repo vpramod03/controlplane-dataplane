@@ -48,3 +48,10 @@ variable "workercount" {
     description = "talos worker node count"
 }
 
+variable "traefikhttpport" {
+    description = "NodePort value for Port 80"
+}
+
+variable "traefikhttpsport" {
+    description = "NodePort Value for port 443"
+}
