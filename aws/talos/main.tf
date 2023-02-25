@@ -169,6 +169,24 @@ resource "aws_lb_target_group" "talos-tg" {
   
 }
 
+resource "aws_lb_target_group" "traefik-tg-80" {
+    name = "traefik-tg-80"
+    port = var.traefikhttpport
+    protocol = "TCP"
+    target_type = "ip"
+    vpc_id = module.vpc.vpc_id
+  
+}
+
+resource "aws_lb_target_group" "traefik-tg-443" {
+    name = "traefik-tg-443"
+    port = var.traefikhttpsport
+    protocol = "TCP"
+    target_type = "ip"
+    vpc_id = module.vpc.vpc_id
+  
+}
+
 resource "aws_lb_target_group_attachment" "registertarget" {
 
     count = var.mastercount
@@ -178,6 +196,42 @@ resource "aws_lb_target_group_attachment" "registertarget" {
 
 }
 
+resource "aws_lb_target_group_attachment" "registertarget-traefik-80" {
+
+    count = var.workercount
+    target_group_arn = aws_lb_target_group.traefik-tg-80.arn
+    target_id = "${element(split(",", join(",", aws_instance.talos_worker_instance.*.private_ip)), count.index)}" 
+    depends_on = [ aws_instance.talos_worker_instance ]  
+
+}
+
+resource "aws_lb_target_group_attachment" "registertarget-traefik-443" {
+
+    count = var.mastercount
+    target_group_arn = aws_lb_target_group.traefik-tg-443.arn
+    target_id = "${element(split(",", join(",", aws_instance.talos_worker_instance.*.private_ip)), count.index)}" 
+    depends_on = [ aws_instance.talos_worker_instance ]  
+
+}
+
+resource "aws_eip" "traefik" {
+  vpc      = true
+}
+
+resource "aws_lb" "traefik" {
+  name               = "traefik"
+  load_balancer_type = "network"
+
+  subnet_mapping {
+    subnet_id     = "${element(module.vpc.private_subnets, 0)}"
+    allocation_id = aws_eip.traefik.id
+  }
+
+  subnet_mapping {
+    subnet_id     = "${element(module.vpc.private_subnets, 1)}"
+    allocation_id = aws_eip.traefik.id
+  }
+}
 
 resource "aws_alb_listener" "talos-listener" {
     load_balancer_arn = module.alb.lb_arn
@@ -186,6 +240,28 @@ resource "aws_alb_listener" "talos-listener" {
     default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.talos-tg.arn
+  }
+  
+}
+
+resource "aws_alb_listener" "traefik-listener-443" {
+    load_balancer_arn = aws_lb.traefik.arn
+    port = 443
+    protocol = "TCP"
+    default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.traefik-tg-443.arn
+  }
+  
+}
+
+resource "aws_alb_listener" "traefik-listener-80" {
+    load_balancer_arn = aws_lb.traefik.arn
+    port = 80
+    protocol = "TCP"
+    default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.traefik-tg-80.arn
   }
   
 }
