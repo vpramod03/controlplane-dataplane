@@ -1,29 +1,13 @@
-
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-    }
-  }
-}
-
-provider "vault" {
-  address = "https://vault-0.default.svc:8200"
-  skip_tls_verify = true
-}
-data "vault_generic_secret" "aws_creds" {
-    path = "aws/aws"
-}
 provider "aws" {
     region = var.region
-    access_key = data.vault_generic_secret.aws_creds.data["aws_access_key_id"]
-    secret_key = data.vault_generic_secret.aws_creds.data["aws_secret_access_key"]
+    access_key = var.AWS_ACCESS_KEY
+    secret_key = var.AWS_SECRET_KEY
 }
 
 data "aws_ami" "talos"{
     most_recent = true
-    name_regex = "^talos-aws-v1.3.3*"
-    owners = ["754618858321"]
+    name_regex = "^talos-v1.1.1*"
+    owners = ["540036508848"]
 
     filter {
         name = "architecture"
@@ -126,10 +110,6 @@ resource "aws_instance" talos_master_instance {
     user_data = data.local_file.controllerfile.content
     associate_public_ip_address = true
 
-    root_block_device {
-       volume_size = 200
-    }
-
     depends_on = [ data.local_file.controllerfile ]
 
     tags = {
@@ -153,9 +133,6 @@ resource "aws_instance" talos_worker_instance {
 
     depends_on = [ data.local_file.workerfile ]
 
-    root_block_device {
-       volume_size = 200
-    }
     tags = {
        Name = "talosworker"
     }
@@ -163,40 +140,10 @@ resource "aws_instance" talos_worker_instance {
 
 }
 
-resource "aws_ebs_volume" "ebs_volume" {
-  count             = "${var.workercount}"
-  availability_zone = "${element(aws_instance.talos_master_instance.*.availability_zone, count.index)}"
-  size              = "200"
-}
-
-resource "aws_volume_attachment" "volume_attachement" {
-  count       = "${var.workercount}"
-  volume_id   = "${aws_ebs_volume.ebs_volume.*.id[count.index]}"
-  device_name = "/dev/sdd"
-  instance_id = "${element(aws_instance.talos_worker_instance.*.id, count.index)}"
-}
 
 resource "aws_lb_target_group" "talos-tg" {
     name = "talos-tg"
     port = 6443
-    protocol = "TCP"
-    target_type = "ip"
-    vpc_id = module.vpc.vpc_id
-  
-}
-
-resource "aws_lb_target_group" "traefik-tg-80" {
-    name = "traefik-tg-80"
-    port = var.traefikhttpport
-    protocol = "TCP"
-    target_type = "ip"
-    vpc_id = module.vpc.vpc_id
-  
-}
-
-resource "aws_lb_target_group" "traefik-tg-443" {
-    name = "traefik-tg-443"
-    port = var.traefikhttpsport
     protocol = "TCP"
     target_type = "ip"
     vpc_id = module.vpc.vpc_id
@@ -212,42 +159,6 @@ resource "aws_lb_target_group_attachment" "registertarget" {
 
 }
 
-resource "aws_lb_target_group_attachment" "registertarget-traefik-80" {
-
-    count = var.workercount
-    target_group_arn = aws_lb_target_group.traefik-tg-80.arn
-    target_id = "${element(split(",", join(",", aws_instance.talos_worker_instance.*.private_ip)), count.index)}" 
-    depends_on = [ aws_instance.talos_worker_instance ]  
-
-}
-
-resource "aws_lb_target_group_attachment" "registertarget-traefik-443" {
-
-    count = var.mastercount
-    target_group_arn = aws_lb_target_group.traefik-tg-443.arn
-    target_id = "${element(split(",", join(",", aws_instance.talos_worker_instance.*.private_ip)), count.index)}" 
-    depends_on = [ aws_instance.talos_worker_instance ]  
-
-}
-
-resource "aws_eip" "traefik" {
-  vpc      = true
-}
-
-resource "aws_lb" "traefik" {
-  name               = "traefik"
-  load_balancer_type = "network"
-
-  subnet_mapping {
-    subnet_id     = "${element(module.vpc.private_subnets, 0)}"
-    allocation_id = aws_eip.traefik.id
-  }
-
-  subnet_mapping {
-    subnet_id     = "${element(module.vpc.private_subnets, 1)}"
-    allocation_id = aws_eip.traefik.id
-  }
-}
 
 resource "aws_alb_listener" "talos-listener" {
     load_balancer_arn = module.alb.lb_arn
@@ -260,43 +171,21 @@ resource "aws_alb_listener" "talos-listener" {
   
 }
 
-resource "aws_alb_listener" "traefik-listener-443" {
-    load_balancer_arn = aws_lb.traefik.arn
-    port = 443
-    protocol = "TCP"
-    default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.traefik-tg-443.arn
-  }
-  
-}
-
-resource "aws_alb_listener" "traefik-listener-80" {
-    load_balancer_arn = aws_lb.traefik.arn
-    port = 80
-    protocol = "TCP"
-    default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.traefik-tg-80.arn
-  }
-  
-}
-
 resource "null_resource" "bootstrap_etcd" {
     provisioner "local-exec" {
-        command = "./talosctl  --talosconfig scripts/talosconfig config endpoint ${aws_instance.talos_master_instance.0.public_ip}"
+        command = "talosctl  --talosconfig scripts/talosconfig config endpoint ${aws_instance.talos_master_instance.0.public_ip}"
       
     }
     provisioner "local-exec" {
-        command = "./talosctl  --talosconfig scripts/talosconfig config node ${aws_instance.talos_master_instance.0.public_ip}"
+        command = "talosctl  --talosconfig scripts/talosconfig config node ${aws_instance.talos_master_instance.0.public_ip}"
 
     }
     provisioner "local-exec" {
-        command = "sleep 60; ./talosctl --talosconfig scripts/talosconfig bootstrap"
+        command = "sleep 60; talosctl --talosconfig scripts/talosconfig bootstrap"
     }
 
     provisioner "local-exec" {
-        command = "./talosctl --talosconfig scripts/talosconfig kubeconfig ."
+        command = "talosctl --talosconfig scripts/talosconfig kubeconfig ."
     }
     depends_on = [ aws_instance.talos_master_instance ]
 
