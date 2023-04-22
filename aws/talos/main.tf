@@ -1,7 +1,23 @@
+
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+    }
+  }
+}
+
+provider "vault" {
+  address = "https://vault-0.default.svc:8200"
+  skip_tls_verify = true
+}
+data "vault_generic_secret" "aws_creds" {
+    path = "aws/aws"
+}
 provider "aws" {
     region = var.region
-    access_key = var.AWS_ACCESS_KEY
-    secret_key = var.AWS_SECRET_KEY
+    access_key = data.vault_generic_secret.aws_creds.data["aws_access_key_id"]
+    secret_key = data.vault_generic_secret.aws_creds.data["aws_secret_access_key"]
 }
 
 data "aws_ami" "talos"{
