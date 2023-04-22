@@ -32,41 +32,41 @@ output "aws_lb_target_group_name" {
 }
 
 output "alb_id" {
-  value = module.alb.lb_id
+  value = aws_lb.k3s_server.dns_name
   description = "ID of the alb created"
   
 }
 
 output "master_instance_ids" {
-  value = aws_instance.talos_master_instance.*.host_id
+  value = aws_instance.k3s_master_instance.*.host_id
   description = "instance id's of talos master nodes"
   
 }
 
 output "master_instance_private_ips" {
-  value = aws_instance.talos_master_instance.*.private_ip
+  value = aws_instance.k3s_master_instance.*.private_ip
   description = "List of private ip's of master nodes"
 }
 
 output "master_tags" {
-  value = aws_instance.talos_master_instance.*.tags_all
+  value = aws_instance.k3s_master_instance.*.tags_all
   description = "All tags that are tagged for worker"
   
 }
 
 output "worker_instance_ids" {
-  value = aws_instance.talos_worker_instance.*.host_id
+  value = aws_instance.k3s_worker_instance.*.host_id
   description = "instance id's of talos worker nodes"
   
 }
 
 output "worker_instance_private_ips" {
-  value = aws_instance.talos_worker_instance.*.private_ip
+  value = aws_instance.k3s_worker_instance.*.private_ip
   description = "List of private ip's worker nodes"
 }
 
 output "worker_tags" {
-  value = aws_instance.talos_worker_instance.*.tags_all
+  value = aws_instance.k3s_worker_instance.*.tags_all
   description = "All tags that are tagged for worker"
   
 }
