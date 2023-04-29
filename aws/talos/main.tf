@@ -24,8 +24,8 @@ provider "aws" {
 
 data "aws_ami" "talos"{
     most_recent = true
-    name_regex = "^talos-aws-v1.3.3*"
-    owners = ["754618858321"]
+    name_regex = "^talos-1.3.3*"
+    owners = ["894352288813"]
 
     filter {
         name = "architecture"
