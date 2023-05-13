@@ -5,6 +5,13 @@ terraform {
       source  = "hashicorp/aws"
     }
   }
+  backend "s3" {
+#    bucket         	   = "${var.tfstatebucket}"
+    key              	 = "state/terraform.tfstate"
+#    region         	   = "${var.tfstatebucketregion}"
+    encrypt        	   = true
+#    dynamodb_table = "${var.dynamotableid}"
+  }
 }
 
 #provider "vault" {
@@ -14,6 +21,7 @@ terraform {
 #data "vault_generic_secret" "aws_creds" {
 #    path = "aws/aws"
 #}
+
 provider "aws" {
     region = var.region
     access_key = var.AWS_ACCESS_KEY
@@ -24,7 +32,7 @@ provider "aws" {
 
 data "aws_ami" "talos"{
     most_recent = true
-    name_regex = "^talos-1.3.3*"
+    name_regex = "^talos-aws-1.3.3*"
     owners = ["894352288813"]
 
     filter {
