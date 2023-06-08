@@ -15,3 +15,9 @@
         - bind
         - rshared
         - rw
+- op: add
+  path: /cluster/network/cni
+  value:
+    name: custom
+    urls:
+        - https://docs.projectcalico.org/archive/v3.20/manifests/canal.yaml
