@@ -55,3 +55,19 @@ variable "traefikhttpport" {
 variable "traefikhttpsport" {
     description = "NodePort Value for port 443"
 }
+
+variable "talostg" {
+    description = "Name of the talosg target group"
+}
+
+variable "traefik_tg_80_name" {
+    description = "Name of the traefik 80 port target group"
+}
+
+variable "traefik_tg_443_name" {
+    description = "Name of the traefik 443 port target group"
+}
+
+variable "traefiklbname" {
+    description = "Name of the traefik lb"
+}

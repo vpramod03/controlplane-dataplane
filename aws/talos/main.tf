@@ -187,7 +187,7 @@ resource "aws_volume_attachment" "volume_attachement" {
 }
 
 resource "aws_lb_target_group" "talos-tg" {
-    name = "talos-tg"
+    name = var.talostg
     port = 6443
     protocol = "TCP"
     target_type = "ip"
@@ -196,7 +196,7 @@ resource "aws_lb_target_group" "talos-tg" {
 }
 
 resource "aws_lb_target_group" "traefik-tg-80" {
-    name = "traefik-tg-80"
+    name = var.traefik_tg_80_name
     port = var.traefikhttpport
     protocol = "TCP"
     target_type = "ip"
@@ -205,7 +205,7 @@ resource "aws_lb_target_group" "traefik-tg-80" {
 }
 
 resource "aws_lb_target_group" "traefik-tg-443" {
-    name = "traefik-tg-443"
+    name = var.traefik_tg_443_name
     port = var.traefikhttpsport
     protocol = "TCP"
     target_type = "ip"
@@ -245,7 +245,7 @@ resource "aws_eip" "traefik" {
 }
 
 resource "aws_lb" "traefik" {
-  name               = "traefik"
+  name               = var.traefiklbname
   load_balancer_type = "network"
 
   subnet_mapping {
