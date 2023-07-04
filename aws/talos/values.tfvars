@@ -16,3 +16,4 @@ talostg =
 traefik_tg_80_name = 
 traefik_tg_443_name = 
 traefiklbname = 
+spot_price =

@@ -123,10 +123,13 @@ data "local_file" "workerfile" {
   depends_on = [ null_resource.createtalosconfig ]
 }
 
-resource "aws_instance" talos_master_instance {
+resource "aws_spot_instance_request" talos_master_instance {
 
     count = var.mastercount
 
+    spot_price = "${var.spot_price}"
+    wait_for_fulfillment = true
+    spot_type = "one-time"
     ami = data.aws_ami.talos.id
     instance_type = var.instance_type
     monitoring  = var.nodemonitoringenabled
@@ -148,9 +151,13 @@ resource "aws_instance" talos_master_instance {
 
 
 }
-resource "aws_instance" talos_worker_instance {
+resource "aws_spot_instance_request" talos_worker_instance {
     
     count = var.workercount
+
+    spot_price = "${var.spot_price}"
+    wait_for_fulfillment = true
+    spot_type = "one-time"
 
     ami = data.aws_ami.talos.id
     instance_type = var.instance_type
@@ -175,7 +182,7 @@ resource "aws_instance" talos_worker_instance {
 
 resource "aws_ebs_volume" "ebs_volume" {
   count             = "${var.workercount}"
-  availability_zone = "${element(aws_instance.talos_master_instance.*.availability_zone, count.index)}"
+  availability_zone = "${element(aws_spot_instance_request.talos_master_instance.*.availability_zone, count.index)}"
   size              = "200"
 }
 
@@ -183,7 +190,7 @@ resource "aws_volume_attachment" "volume_attachement" {
   count       = "${var.workercount}"
   volume_id   = "${aws_ebs_volume.ebs_volume.*.id[count.index]}"
   device_name = "/dev/sdd"
-  instance_id = "${element(aws_instance.talos_worker_instance.*.id, count.index)}"
+  instance_id = "${element(aws_spot_instance_request.talos_worker_instance.*.id, count.index)}"
 }
 
 resource "aws_lb_target_group" "talos-tg" {
@@ -217,8 +224,8 @@ resource "aws_lb_target_group_attachment" "registertarget" {
 
     count = var.mastercount
     target_group_arn = aws_lb_target_group.talos-tg.arn
-    target_id = "${element(split(",", join(",", aws_instance.talos_master_instance.*.private_ip)), count.index)}" 
-    depends_on = [ aws_instance.talos_master_instance ]  
+    target_id = "${element(split(",", join(",", aws_spot_instance_request.talos_master_instance.*.private_ip)), count.index)}" 
+    depends_on = [ aws_spot_instance_request.talos_master_instance ]  
 
 }
 
@@ -226,8 +233,8 @@ resource "aws_lb_target_group_attachment" "registertarget-traefik-80" {
 
     count = var.workercount
     target_group_arn = aws_lb_target_group.traefik-tg-80.arn
-    target_id = "${element(split(",", join(",", aws_instance.talos_worker_instance.*.private_ip)), count.index)}" 
-    depends_on = [ aws_instance.talos_worker_instance ]  
+    target_id = "${element(split(",", join(",", aws_spot_instance_request.talos_worker_instance.*.private_ip)), count.index)}" 
+    depends_on = [ aws_spot_instance_request.talos_worker_instance ]  
 
 }
 
@@ -235,8 +242,8 @@ resource "aws_lb_target_group_attachment" "registertarget-traefik-443" {
 
     count = var.mastercount
     target_group_arn = aws_lb_target_group.traefik-tg-443.arn
-    target_id = "${element(split(",", join(",", aws_instance.talos_worker_instance.*.private_ip)), count.index)}" 
-    depends_on = [ aws_instance.talos_worker_instance ]  
+    target_id = "${element(split(",", join(",", aws_spot_instance_request.talos_worker_instance.*.private_ip)), count.index)}" 
+    depends_on = [ aws_spot_instance_request.talos_worker_instance ]  
 
 }
 
@@ -294,11 +301,11 @@ resource "aws_alb_listener" "traefik-listener-80" {
 
 resource "null_resource" "bootstrap_etcd" {
     provisioner "local-exec" {
-        command = "./talosctl  --talosconfig scripts/talosconfig config endpoint ${aws_instance.talos_master_instance.0.public_ip}"
+        command = "./talosctl  --talosconfig scripts/talosconfig config endpoint ${aws_spot_instance_request.talos_master_instance.0.public_ip}"
       
     }
     provisioner "local-exec" {
-        command = "./talosctl  --talosconfig scripts/talosconfig config node ${aws_instance.talos_master_instance.0.public_ip}"
+        command = "./talosctl  --talosconfig scripts/talosconfig config node ${aws_spot_instance_request.talos_master_instance.0.public_ip}"
 
     }
     provisioner "local-exec" {
@@ -308,6 +315,6 @@ resource "null_resource" "bootstrap_etcd" {
     provisioner "local-exec" {
         command = "./talosctl --talosconfig scripts/talosconfig kubeconfig ."
     }
-    depends_on = [ aws_instance.talos_master_instance ]
+    depends_on = [ aws_spot_instance_request.talos_master_instance ]
 
 }

@@ -71,3 +71,7 @@ variable "traefik_tg_443_name" {
 variable "traefiklbname" {
     description = "Name of the traefik lb"
 }
+
+variable "spot_price" {
+    description = "price of spot instance"
+}
