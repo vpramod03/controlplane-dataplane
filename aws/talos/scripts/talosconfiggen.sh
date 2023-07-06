@@ -19,7 +19,7 @@ done
 if ! command -v ./talosctl &> /dev/null
 then
     echo "Installing talos cli"
-    curl -Lo talosctl https://github.com/siderolabs/talos/releases/download/v1.1.1/talosctl-$(uname -s | tr "[:upper:]" "[:lower:]")-arm64
+    curl -sL https://talos.dev/install | sh
     chmod +x ./talosctl
 else
     echo "talosctl is already installed skipping.."
@@ -27,15 +27,15 @@ fi
 
 echo ${dnsname}
 echo ${4}
-./talosctl gen config talosconfig-userdata https://${dnsname}:${4} --with-examples=false --with-docs=false --output-dir scripts/ --config-patch @scripts/patch.yaml
-./talosctl validate --config scripts/controlplane.yaml --mode cloud
+talosctl gen config talosconfig-userdata https://${dnsname}:${4} --with-examples=false --with-docs=false --output-dir scripts/ --config-patch @scripts/patch.yaml
+talosctl validate --config scripts/controlplane.yaml --mode cloud
 if [ $? -eq 1 ]
 then
     echo "scripts/controlplane.yaml is invalid"
     exit
 fi
 
-./talosctl validate --config scripts/worker.yaml --mode cloud
+talosctl validate --config scripts/worker.yaml --mode cloud
 
 if [ $? -eq 1 ]
 then
