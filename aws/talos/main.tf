@@ -182,7 +182,7 @@ resource "aws_spot_instance_request" talos_worker_instance {
 
 resource "aws_ebs_volume" "ebs_volume" {
   count             = "${var.workercount}"
-  availability_zone = "${element(aws_spot_instance_request.talos_master_instance.*.availability_zone, count.index)}"
+  availability_zone = "us-west-2a"
   size              = "200"
 }
 
@@ -190,7 +190,7 @@ resource "aws_volume_attachment" "volume_attachement" {
   count       = "${var.workercount}"
   volume_id   = "${aws_ebs_volume.ebs_volume.*.id[count.index]}"
   device_name = "/dev/sdd"
-  instance_id = "${element(aws_spot_instance_request.talos_worker_instance.*.id, count.index)}"
+  instance_id = "${element(aws_spot_instance_request.talos_worker_instance.*.spot_instance_id, count.index)}"
 }
 
 resource "aws_lb_target_group" "talos-tg" {
