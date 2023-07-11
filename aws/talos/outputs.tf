@@ -70,3 +70,8 @@ output "worker_tags" {
   description = "All tags that are tagged for worker"
   
 }
+output "traefik_lb_endpoint" {
+  value = aws_lb.traefik.dns_name
+  description = "DNS Name for the CNAME creation"
+  
+}
