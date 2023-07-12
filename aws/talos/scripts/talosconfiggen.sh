@@ -16,18 +16,17 @@ do
        ;;
     esac
 done
-if ! command -v ./talosctl &> /dev/null
+if ! command -v talosctl &> /dev/null
 then
     echo "Installing talos cli"
     curl -sL https://talos.dev/install | sh
-    chmod +x ./talosctl
 else
     echo "talosctl is already installed skipping.."
 fi
 
 echo ${dnsname}
 echo ${4}
-talosctl gen config talosconfig-userdata https://${dnsname}:${4} --with-examples=false --with-docs=false --output-dir scripts/ --config-patch @scripts/patch.yaml
+talosctl gen config talosconfig-userdata https://${dnsname}:${4} --with-examples=false --with-docs=false --output-dir scripts/ --config-patch @scripts/patch.yaml --force
 talosctl validate --config scripts/controlplane.yaml --mode cloud
 if [ $? -eq 1 ]
 then
