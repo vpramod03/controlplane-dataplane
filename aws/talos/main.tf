@@ -294,19 +294,23 @@ resource "aws_alb_listener" "traefik-listener-80" {
 
 resource "null_resource" "bootstrap_etcd" {
     provisioner "local-exec" {
-        command = "./talosctl  --talosconfig scripts/talosconfig config endpoint ${aws_instance.talos_master_instance.0.public_ip}"
+        command = "talosctl  --talosconfig scripts/talosconfig config endpoint ${aws_instance.talos_master_instance.0.public_ip}"
       
     }
     provisioner "local-exec" {
-        command = "./talosctl  --talosconfig scripts/talosconfig config node ${aws_instance.talos_master_instance.0.public_ip}"
+        command = "talosctl  --talosconfig scripts/talosconfig config node ${aws_instance.talos_master_instance.0.public_ip}"
 
     }
     provisioner "local-exec" {
-        command = "sleep 60; ./talosctl --talosconfig scripts/talosconfig bootstrap"
+        command = "sleep 60; talosctl --talosconfig scripts/talosconfig bootstrap"
     }
 
     provisioner "local-exec" {
-        command = "./talosctl --talosconfig scripts/talosconfig kubeconfig ."
+        command = "talosctl --talosconfig scripts/talosconfig kubeconfig ../../../../config/"
+    }
+    
+    provisioner "local-exec" {
+        command = "yq -e '.LoadBalancerHost |= \"test.com\"' -i ../../../../config/capten.yaml"
     }
     depends_on = [ aws_instance.talos_master_instance ]
 
