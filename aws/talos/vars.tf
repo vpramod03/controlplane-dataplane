@@ -71,3 +71,6 @@ variable "traefik_tg_443_name" {
 variable "traefiklbname" {
     description = "Name of the traefik lb"
 }
+variable "configfolderpath" {
+    description = "CLI config folder path"
+}
