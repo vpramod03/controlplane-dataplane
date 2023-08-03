@@ -310,7 +310,7 @@ resource "null_resource" "bootstrap_etcd" {
     }
     
     provisioner "local-exec" {
-        command = "yq -e '.LoadBalancerHost |= \"test.com\"' -i ../../../../config/capten.yaml"
+        command = "yq -e '.LoadBalancerHost |= \"${aws_lb.traefik.dns_name}\"' -i ../../../../config/capten.yaml"
     }
     depends_on = [ aws_instance.talos_master_instance ]
 
