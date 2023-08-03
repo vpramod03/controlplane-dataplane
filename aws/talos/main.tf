@@ -306,11 +306,11 @@ resource "null_resource" "bootstrap_etcd" {
     }
 
     provisioner "local-exec" {
-        command = "talosctl --talosconfig scripts/talosconfig kubeconfig ./config/"
+        command = "talosctl --talosconfig scripts/talosconfig kubeconfig ${var.configfolderpath}"
     }
     
     provisioner "local-exec" {
-        command = "yq -e '.LoadBalancerHost |= \"${aws_lb.traefik.dns_name}\"' -i ./config/capten.yaml"
+        command = "yq -e '.LoadBalancerHost |= \"${aws_lb.traefik.dns_name}\"' -i ${var.configfolderpath}/capten.yaml"
     }
     depends_on = [ aws_instance.talos_master_instance ]
 
