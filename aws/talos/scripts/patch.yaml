@@ -20,4 +20,4 @@
   value:
     name: custom
     urls:
-        - https://docs.projectcalico.org/archive/v3.20/manifests/canal.yaml
+        - https://docs.projectcalico.org/archive/v3.25/manifests/canal.yaml
