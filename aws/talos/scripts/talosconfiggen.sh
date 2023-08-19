@@ -24,6 +24,21 @@ else
     echo "talosctl is already installed skipping.."
 fi
 
+if [ -f scripts/controlplane.yaml ]
+then
+   rm -f scripts/controlplane.yaml
+fi
+
+if [ -f scripts/wokrer.yaml ]
+then
+   rm -f scripts/worker.yaml
+fi
+
+if [ -f scripts/talosconfig ]
+then
+   rm -f scripts/talosconfig
+fi
+
 echo ${dnsname}
 echo ${4}
 talosctl gen config talosconfig-userdata https://${dnsname}:${4} --with-examples=false --with-docs=false --output-dir scripts/ --config-patch @scripts/patch.yaml --force
