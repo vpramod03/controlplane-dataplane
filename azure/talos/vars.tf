@@ -15,3 +15,11 @@ variable "workercount" {
 variable "nics" {
     description = "nics name"
 }
+
+variable "instancetype" {
+    description = "instancetype of virtual machines"
+}
+
+variable "publicipname" {
+    description = "public ip name"
+}
