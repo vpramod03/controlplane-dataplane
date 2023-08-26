@@ -155,8 +155,8 @@ resource "azurerm_network_security_rule" "kube" {
 }
 
 resource "azurerm_public_ip" "talos-public-ip" {
-    count = var.mastercount
-    name = element(concat(var.publicipname, [""]), count.index)
+    count = length(var.publicipname)
+    name = "publicip-${count.index}"
     resource_group_name = azurerm_resource_group.talosrg.name
     allocation_method = "Static"
     location = var.region
@@ -224,10 +224,27 @@ resource "azurerm_network_interface" "nics" {
   }
 }
 
+resource "azurerm_network_interface" "workernics" {
+  count             = length(var.workernics)
+  name              = "workernic-${count.index}"
+  location          = var.region
+  resource_group_name = azurerm_resource_group.talosrg.name
+
+
+  ip_configuration {
+    private_ip_address_allocation = "Dynamic"
+    name            = "config-${count.index}"
+    subnet_id       = azurerm_subnet.talossubnet.id
+    private_ip_address = element(var.nics, count.index)
+    
+  }
+}
+
 resource "azurerm_availability_set" "talosas" {
     name = "talosas"
     location = azurerm_resource_group.talosrg.location
     resource_group_name = azurerm_resource_group.talosrg.name
+    managed = true
 
 
 }
@@ -235,7 +252,7 @@ resource "azurerm_availability_set" "talosas" {
 resource "null_resource" "createtalosconfig" {
     provisioner "local-exec" {
 
-        command = "talosctl gen config talos-k8s https://${azurerm_public_ip.talos-public-ip-lb.ip_address}:6443 "
+        command = "/bin/bash scripts/talosconfiggen.sh -h ${azurerm_public_ip.talos-public-ip-lb.ip_address} -p 443"
 
   }
 
@@ -244,87 +261,107 @@ resource "null_resource" "createtalosconfig" {
 }
 
 data "local_file" "controllerfile" {
-  filename = "./controlplane.yaml"
+  filename = "scripts/controlplane.yaml"
   depends_on = [ null_resource.createtalosconfig ]
 }
 
 data "local_file" "workerfile" {
-  filename = "./worker.yaml"
+  filename = "scripts/worker.yaml"
   depends_on = [ null_resource.createtalosconfig ]
 }
 
 resource "azurerm_virtual_machine" "talosmaster" {
-    count = var.mastercount
-    name = "talosmaster"
+    count = length(var.mastercount)
+    name = "talosmaster-${count.index}"
     resource_group_name = azurerm_resource_group.talosrg.name
     location = var.region
     vm_size = var.instancetype
-    boot_diagnostics {
-      enabled = true
-      storage_uri = azurerm_storage_account.talosimagesa.primary_web_endpoint
-    }
+#    boot_diagnostics {
+#      enabled = true
+#      storage_uri = azurerm_storage_account.talosimagesa.primary_web_endpoint
+#    }
 
     os_profile {
       computer_name  = "talos"
       admin_username = "talos"
+      admin_password = "Talos@1234"
       custom_data = data.local_file.controllerfile.content
     }
 
-    storage_data_disk {
-      name = "talosstoragedata"
-      disk_size_gb = "20"
-      lun = "1"
-      create_option = "Attach"
-    }
+#    storage_data_disk {
+#      name = "talosstoragedata"
+#      disk_size_gb = "20"
+#      lun = "1"
+#      create_option = "Empty"
+#    }
 
+    storage_image_reference {
+      id = "/subscriptions/7bccafd3-c548-4b45-837d-fb7dc81167b6/resourceGroups/StorageRG/providers/Microsoft.Compute/images/talos-azure"
+    }
     storage_os_disk {
-    name              = "talososdisk1"
+    name              = "talosmaster-${count.index}"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
+    disk_size_gb = "20"
+    }
+
+    os_profile_linux_config {
+    disable_password_authentication = false
     }
 
     network_interface_ids = [ element( azurerm_network_interface.nics[*].id, count.index ) ]
     availability_set_id = azurerm_availability_set.talosas.id
+
+    depends_on = [ azurerm_availability_set.talosas ]
 
 
   
 }
 
 resource "azurerm_virtual_machine" "talosworker" {
-    count = var.workercount
-    name = "talosworker"
+    count = length(var.workercount)
+    name = "talosworker-${count.index}"
     resource_group_name = azurerm_resource_group.talosrg.name
     location = var.region
     vm_size = var.instancetype
-    boot_diagnostics {
-      enabled = true
-      storage_uri = azurerm_storage_account.talosimagesa.primary_web_endpoint
-    }
-
+#    boot_diagnostics {
+#      enabled = true
+#      storage_uri = azurerm_storage_account.talosimagesa.primary_web_endpoint
+#    }
+    
     os_profile {
       computer_name  = "talos"
       admin_username = "talos"
+      admin_password = "Talos@1234"
       custom_data = data.local_file.workerfile.content
     }
 
-    storage_data_disk {
-      name = "talosstoragedata"
-      disk_size_gb = "20"
-      lun = "1"
-      create_option = "Attach"
+#   storage_data_disk {
+#      name = "talosstoragedata"
+#      disk_size_gb = "20"
+#      lun = "1"
+#      create_option = "Empty"
+#    }
+    storage_image_reference {
+      id = "/subscriptions/7bccafd3-c548-4b45-837d-fb7dc81167b6/resourceGroups/StorageRG/providers/Microsoft.Compute/images/talos-azure"
     }
-    
+
     storage_os_disk {
-    name              = "talososdisk1"
+    name              = "talosworker-${count.index}"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
+    disk_size_gb = "20"
     }
     availability_set_id = azurerm_availability_set.talosas.id
-    network_interface_ids = [ element( azurerm_network_interface.nics[*].id, count.index ) ]
-    
+    network_interface_ids = [ element(azurerm_network_interface.workernics[*].id, count.index ) ]
 
+    os_profile_linux_config {
+    disable_password_authentication = false
+    }
+    
+    depends_on = [ azurerm_availability_set.talosas ]
   
 }
 

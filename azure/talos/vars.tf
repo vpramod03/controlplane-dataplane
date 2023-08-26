@@ -16,10 +16,15 @@ variable "nics" {
     description = "nics name"
 }
 
+variable "workernics" {
+    description = "nics name"
+}
+
 variable "instancetype" {
     description = "instancetype of virtual machines"
 }
 
 variable "publicipname" {
+    type = list
     description = "public ip name"
 }
