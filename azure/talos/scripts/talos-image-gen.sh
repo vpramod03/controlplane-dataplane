@@ -4,27 +4,28 @@
 
 mkdir -p manifests/image/talos
 
-curl -o manifests/image/talos https://github.com/siderolabs/talos/releases/download/v1.2.7/azure-amd64.tar.gz
+wget -P manifests/image/talos/ https://github.com/siderolabs/talos/releases/download/v1.5.0/azure-amd64.vhd.xz 
 
-tar -xvzf manifests/image/talos/azure-amd64.tar.gz
+xz -d manifests/image/talos/azure-amd64.vhd.xz
 
 #Install azure cli
 
-curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+#curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
-export CONNECTION = $(az storage account show-connection-string \
+export CONNECTION=$(az storage account show-connection-string \
                     -n talosimagesa \
                     -g StorageRG \
                     -o tsv)
-
+echo $CONNECTION
 az storage blob upload \
   --connection-string $CONNECTION \
   --container-name talosimagecont \
-  -f manifests/image/talos/disk.vhd \
-  -n talos-azure.vhd
+  -f manifests/image/talos/azure-amd64.vhd \
+  -n talos-azure.vhd \
+  --overwrite
 
-az image create \
-  --name talos \
-  --source https://talosimagesa.blob.core.windows.net/talosimagecont/disk.vhd \
-  --os-type linux \
-  -g StorageRG
+#az image create \
+#  --name talos \
+#  --source https://talosimagesa.blob.core.windows.net/talosimagecont/talos-azure.vhd \
+#  --os-type linux \
+#  -g StorageRG
