@@ -1,0 +1,59 @@
+version: v1alpha1
+debug: false
+persist: true
+machine:
+    type: worker
+    token: ley7ay.7ot1l4tngn1s6g3i
+    ca:
+        crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJQakNCOGFBREFnRUNBaEJUUGREUktCeUdiL2xaYlM0dkp6V3FNQVVHQXl0bGNEQVFNUTR3REFZRFZRUUsKRXdWMFlXeHZjekFlRncweU16QTRNamt4T0RJeE16VmFGdzB6TXpBNE1qWXhPREl4TXpWYU1CQXhEakFNQmdOVgpCQW9UQlhSaGJHOXpNQ293QlFZREsyVndBeUVBZUZrcGlDRUw5TjY1VG1nNVFockhRMi9qSC90N3RQNDhVVkd4CnlMYmc1QzJqWVRCZk1BNEdBMVVkRHdFQi93UUVBd0lDaERBZEJnTlZIU1VFRmpBVUJnZ3JCZ0VGQlFjREFRWUkKS3dZQkJRVUhBd0l3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFkQmdOVkhRNEVGZ1FVTkFwWStQeWlPbUpPOTA0VQpEdjI4NC9CYkxFSXdCUVlESzJWd0EwRUFKMTBlcEVjT3pZUmVVVXc3VG5DSUxUeXRaN09vTXpDaks0VHd0azdHCmZEZGVVZ1grVHlGZmxLYzkxam1ZOUtIb0dJcGpaTmg1MFpEQmZOaURCWDVYRHc9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+        key: ""
+    certSANs: []
+    kubelet:
+        image: ghcr.io/siderolabs/kubelet:v1.27.3
+        extraMounts:
+            - destination: /var/openebs/local
+              type: bind
+              source: /var/openebs/local
+              options:
+                - bind
+                - rshared
+                - rw
+        defaultRuntimeSeccompProfileEnabled: true
+        disableManifestsDirectory: true
+    network: {}
+    install:
+        disk: /dev/sda
+        image: ghcr.io/siderolabs/installer:v1.3.3
+        extensions:
+            - image: ghcr.io/siderolabs/iscsi-tools:v0.1.1
+        bootloader: true
+        wipe: false
+    features:
+        rbac: true
+        stableHostname: true
+        apidCheckExtKeyUsage: true
+cluster:
+    id: BZ7c-qHbUUsV8Wbom7o0PBwY66LVB81VLlBQcQBvJi0=
+    secret: eaQuvYBNrGOlI1F3CopGoT3bqNdIVBzvtOaAFqAf6ZM=
+    controlPlane:
+        endpoint: https://20.219.191.24:6443
+    network:
+        cni:
+            name: custom
+            urls:
+                - https://docs.projectcalico.org/archive/v3.25/manifests/canal.yaml
+        dnsDomain: cluster.local
+        podSubnets:
+            - 10.244.0.0/16
+        serviceSubnets:
+            - 10.96.0.0/12
+    token: s6vl9q.z7evrcp0h1suvy4t
+    ca:
+        crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJpakNDQVRDZ0F3SUJBZ0lSQUxRdmtSck1vbkp2dWw5SFlYWjZRWm93Q2dZSUtvWkl6ajBFQXdJd0ZURVQKTUJFR0ExVUVDaE1LYTNWaVpYSnVaWFJsY3pBZUZ3MHlNekE0TWpreE9ESXhNelZhRncwek16QTRNall4T0RJeApNelZhTUJVeEV6QVJCZ05WQkFvVENtdDFZbVZ5Ym1WMFpYTXdXVEFUQmdjcWhrak9QUUlCQmdncWhrak9QUU1CCkJ3TkNBQVRWdjRoUEU2V2wwcmhMQmNxZEx5cFFCUzIrc3ZNaURpZjZuYVBlVEtHUDZid283ZmFPbjE4VHduN2QKZjUwQ240UUZ5SHZyS0doSmc5K2paVUtVNjRHU28yRXdYekFPQmdOVkhROEJBZjhFQkFNQ0FvUXdIUVlEVlIwbApCQll3RkFZSUt3WUJCUVVIQXdFR0NDc0dBUVVGQndNQ01BOEdBMVVkRXdFQi93UUZNQU1CQWY4d0hRWURWUjBPCkJCWUVGQ2xvQkhJQ3d6cUliak1hWXJQdm1iZ3g4NHdHTUFvR0NDcUdTTTQ5QkFNQ0EwZ0FNRVVDSVFDUkhxcFoKcjVBT0FEVCs2Nk1hR0VXb0swa0syUlBBQnJGdWFGdjUxNzBzMWdJZ0hDdWRlSmxkMjdZQWJaSlF5OWN4SWlCLwpsRkg5ZUpxc2VJQkJJRHdxaVBjPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+        key: ""
+    discovery:
+        enabled: true
+        registries:
+            kubernetes:
+                disabled: true
+            service: {}
