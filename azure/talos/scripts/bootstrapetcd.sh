@@ -18,8 +18,8 @@ do
     if [ "$?" -eq 0 ]
     then
         echo "Talos API is up bootstrapping etcd"
-        talosctl  --talosconfig scripts/talosconfig config endpoint "$remoteip"
-        talosctl --talosconfig  scripts/talosconfig bootstrap --nodes "$remoteip"
+        ../../../capten/talosctl  --talosconfig scripts/talosconfig config endpoint "$remoteip"
+        ../../../capten/talosctl --talosconfig  scripts/talosconfig bootstrap --nodes "$remoteip"
         break
     fi
     sleep 30
