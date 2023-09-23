@@ -18,12 +18,12 @@ do
     if [ "$?" -eq 0 ]
     then
         echo "Talos API is up bootstrapping etcd"
-        talosctl  --talosconfig scripts/talosconfig config endpoint "$remoteip"
-        talosctl --talosconfig  scripts/talosconfig bootstrap --nodes "$remoteip"
+        ../../../capten/talosctl  --talosconfig scripts/talosconfig config endpoint "$remoteip"
+        ../../../capten/talosctl --talosconfig  scripts/talosconfig bootstrap --nodes "$remoteip"
         break
     fi
     sleep 30
-    count += 1
+    count=$((count+1))
 done
 
 if [ "$count" -ge 20 ]
