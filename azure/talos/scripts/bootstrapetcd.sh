@@ -23,7 +23,7 @@ do
         break
     fi
     sleep 30
-    count += 1
+    count=$((count+1))
 done
 
 if [ "$count" -ge 20 ]
