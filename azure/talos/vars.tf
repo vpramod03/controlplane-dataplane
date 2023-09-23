@@ -36,3 +36,7 @@ variable "traefikhttpport" {
 variable "traefikhttpsport" {
     description = "Name of the traefik 443 port target group"
 }
+
+variable "configfolderpath" {
+    description = "CLI config folder path"
+}
