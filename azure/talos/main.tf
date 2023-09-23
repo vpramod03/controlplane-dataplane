@@ -174,6 +174,15 @@ resource "azurerm_public_ip" "talos-public-ip-lb" {
   
 }
 
+resource "azurerm_public_ip" "talos-public-ip-nat" {
+    name = "talos-public-ip-nat"
+    resource_group_name = azurerm_resource_group.talosrg.name
+    allocation_method = "Static"
+    location = var.region
+    sku = "Standard"
+  
+}
+
 resource "azurerm_public_ip" "talos-public-ip-traefik" {
     name = "talos-public-ip-traefik"
     resource_group_name = azurerm_resource_group.talosrg.name
@@ -286,7 +295,7 @@ resource "azurerm_lb_rule" "traefik-80" {
   loadbalancer_id                = azurerm_lb.traefiklb.id
   name                           = "traefik-80"
   protocol                       = "Tcp"
-  frontend_port                  = 443
+  frontend_port                  = 80
   backend_port                   = var.traefikhttpport
   frontend_ip_configuration_name = "traefikfe"
   backend_address_pool_ids = [ azurerm_lb_backend_address_pool.traefikbe.id ]
@@ -333,7 +342,34 @@ resource "azurerm_availability_set" "talosas" {
     resource_group_name = azurerm_resource_group.talosrg.name
     managed = true
 
+}
 
+resource "azurerm_network_interface_security_group_association" "networkinterface_sg_association" {
+  count = length(var.workernics)
+  network_interface_id = element( azurerm_network_interface.nics[*].id, count.index % 4)
+  network_security_group_id = azurerm_network_security_group.talossg.id
+}
+
+resource "azurerm_network_interface_security_group_association" "networkinterface_worker_sg_association" {
+  count = length(var.workernics)
+  network_interface_id = element( azurerm_network_interface.workernics[*].id, count.index % 4)
+  network_security_group_id = azurerm_network_security_group.talossg.id
+}
+
+resource "azurerm_nat_gateway" "talosnat" {
+  name                = "worker-node-nat"
+  location            = var.region
+  resource_group_name = azurerm_resource_group.talosrg.name
+}
+
+resource "azurerm_subnet_nat_gateway_association" "talosnatassocation" {
+  subnet_id      = azurerm_subnet.talossubnet.id
+  nat_gateway_id = azurerm_nat_gateway.talosnat.id
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "publicipnatassociation" {
+  nat_gateway_id       = azurerm_nat_gateway.talosnat.id
+  public_ip_address_id = azurerm_public_ip.talos-public-ip-nat.id
 }
 
 resource "null_resource" "createtalosconfig" {
