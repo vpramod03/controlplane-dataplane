@@ -375,7 +375,7 @@ resource "azurerm_nat_gateway_public_ip_association" "publicipnatassociation" {
 resource "null_resource" "createtalosconfig" {
     provisioner "local-exec" {
 
-        command = "/bin/bash scripts/talosconfiggen.sh -h ${azurerm_public_ip.talos-public-ip-lb.ip_address} -p 6443"
+        command = "/bin/bash scripts/talosconfiggen.sh -h ${azurerm_public_ip.talos-public-ip-lb.ip_address} -p 6443 -t ${var.talosctlfolderpath}"
 
   }
 
@@ -491,11 +491,11 @@ resource "azurerm_virtual_machine" "talosworker" {
 
 resource "null_resource" "bootstrap_etcd" {
     provisioner "local-exec" {
-        command = "/bin/bash scripts/bootstrapetcd.sh ${azurerm_public_ip.talos-public-ip[0].ip_address}"
+        command = "/bin/bash scripts/bootstrapetcd.sh ${azurerm_public_ip.talos-public-ip[0].ip_address} ${var.talosctlfolderpath}"
       
     }
     provisioner "local-exec" {
-        command = "talosctl --talosconfig scripts/talosconfig kubeconfig ${var.configfolderpath}"
+        command = "${var.talosctlfolderpath}/talosctl --talosconfig scripts/talosconfig kubeconfig ${var.configfolderpath}"
       
     }
     provisioner "local-exec" {
