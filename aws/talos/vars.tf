@@ -74,3 +74,7 @@ variable "traefiklbname" {
 variable "configfolderpath" {
     description = "CLI config folder path"
 }
+
+variable "talosctlfolderpath" {
+    description = "home folder path for capten cli dir"  
+}
