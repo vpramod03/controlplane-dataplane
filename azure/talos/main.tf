@@ -495,7 +495,7 @@ resource "null_resource" "bootstrap_etcd" {
       
     }
     provisioner "local-exec" {
-        command = "${var.talosctlfolderpath}/talosctl --talosconfig scripts/talosconfig kubeconfig ${var.configfolderpath}"
+        command = "${var.talosctlfolderpath}/talosctl --talosconfig scripts/talosconfig kubeconfig ${var.configfolderpath} --nodes ${azurerm_public_ip.talos-public-ip[0].ip_address}"
       
     }
     provisioner "local-exec" {
