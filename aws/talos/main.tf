@@ -105,7 +105,7 @@ module "alb" {
 resource "null_resource" "createtalosconfig" {
     provisioner "local-exec" {
 
-        command = "/bin/bash scripts/talosconfiggen.sh -h ${module.alb.lb_dns_name} -p 443"
+        command = "/bin/bash scripts/talosconfiggen.sh -h ${module.alb.lb_dns_name} -p 443 -t ${var.talosctlfolderpath}"
 
   }
 
