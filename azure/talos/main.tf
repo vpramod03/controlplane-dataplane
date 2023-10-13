@@ -435,6 +435,7 @@ resource "azurerm_virtual_machine" "talosmaster" {
 
     network_interface_ids = [ element( azurerm_network_interface.nics[*].id, count.index ) ]
     availability_set_id = azurerm_availability_set.talosas.id
+    delete_os_disk_on_termination = true
 
     depends_on = [ azurerm_availability_set.talosas ]
 
@@ -461,12 +462,12 @@ resource "azurerm_virtual_machine" "talosworker" {
       custom_data = data.local_file.workerfile.content
     }
 
-#   storage_data_disk {
-#      name = "talosstoragedata"
-#      disk_size_gb = "20"
-#      lun = "1"
-#      create_option = "Empty"
-#    }
+   storage_data_disk {
+      name = "datadisk-talosworker${count.index}"
+      disk_size_gb = "200"
+      lun = "1"
+      create_option = "Empty"
+    }
     storage_image_reference {
       id = "/subscriptions/7bccafd3-c548-4b45-837d-fb7dc81167b6/resourceGroups/talos-image/providers/Microsoft.Compute/images/talos"
     }
@@ -484,10 +485,12 @@ resource "azurerm_virtual_machine" "talosworker" {
     os_profile_linux_config {
     disable_password_authentication = false
     }
+    delete_os_disk_on_termination = true
     
     depends_on = [ azurerm_availability_set.talosas ]
   
 }
+
 
 resource "null_resource" "bootstrap_etcd" {
     provisioner "local-exec" {
