@@ -499,8 +499,8 @@ resource "null_resource" "bootstrap_etcd" {
       
     }
     provisioner "local-exec" {
-        command = "echo 'LoadBalancerHost = \"${azurerm_public_ip.talos-public-ip-traefik.ip_address}\"' > ${var.configfolderpath}/capten-lb-endpoint.yaml"
-    }
+        command = "echo 'LoadBalancerHost: \"${azurerm_public_ip.talos-public-ip-traefik.ip_address}\"' > ${var.configfolderpath}/capten-lb-endpoint.yaml"
+    } 
     depends_on = [ azurerm_virtual_machine.talosmaster  ]
 
 }
