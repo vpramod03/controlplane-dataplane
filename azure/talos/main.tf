@@ -155,6 +155,36 @@ resource "azurerm_network_security_rule" "kube" {
 
 }
 
+resource "azurerm_network_security_rule" "traefikhttps" {
+    name = "kube"
+    network_security_group_name = azurerm_network_security_group.talossg.name
+    priority = "1005"
+    source_port_range = "*"
+    destination_port_ranges = [ "${var.traefikhttpsport}" ]
+    source_address_prefix  = "*"
+    destination_address_prefix  = "*"
+    direction = "Inbound"
+    access = "Allow"
+    resource_group_name = azurerm_resource_group.talosrg.name
+    protocol = "Tcp"
+
+}
+
+resource "azurerm_network_security_rule" "traefikhttp" {
+    name = "kube"
+    network_security_group_name = azurerm_network_security_group.talossg.name
+    priority = "1006"
+    source_port_range = "*"
+    destination_port_ranges = [ "${var.traefikhttpport}" ]
+    source_address_prefix  = "*"
+    destination_address_prefix  = "*"
+    direction = "Inbound"
+    access = "Allow"
+    resource_group_name = azurerm_resource_group.talosrg.name
+    protocol = "Tcp"
+
+}
+
 resource "azurerm_public_ip" "talos-public-ip" {
     count = length(var.publicipname)
     name = "publicip-${count.index}"
