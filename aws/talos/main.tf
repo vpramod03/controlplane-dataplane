@@ -90,6 +90,8 @@ module "security_group" {
 
 module "alb" {
   source  = "terraform-aws-modules/alb/aws"
+  
+  version = "8.7.0"
 
   name = var.albname
 
