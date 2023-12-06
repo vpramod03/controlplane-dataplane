@@ -13,12 +13,12 @@ provider "azurerm" {
 }
 
 resource "azurerm_resource_group" "storagerg" {
-  name     = "StorageRG"
+  name     = var.storagergname
   location = var.region
 }    
 
 resource "azurerm_storage_account" "talosimagesa" {
-  name                     = "talosimagesa"
+  name                     = var.storage_account_name
   resource_group_name      = "${azurerm_resource_group.storagerg.name}"
   location                 = var.region
   account_tier             = "Standard"
@@ -31,7 +31,7 @@ resource "azurerm_storage_account" "talosimagesa" {
 
 
 resource "azurerm_storage_container" "talosimagecont" {
-  name                  = "talosimagecont"
+  name                  = var.talos_imagecont_name
   storage_account_name  = azurerm_storage_account.talosimagesa.name
   container_access_type = "private"
 }
@@ -69,12 +69,12 @@ resource "azurerm_storage_container" "talosimagecont" {
 #}
 
 resource "azurerm_resource_group" "talosrg" {
-  name     = "talosrg"
+  name     = var.talosrgname
   location = var.region
 }  
 
 resource "azurerm_virtual_network" "talosnet" {
-    name = "talosnet"
+    name = "${var.talos_cluster_name}-vnet"
     address_space = [ "10.0.0.0/16" ]
     location = var.region
     resource_group_name = azurerm_resource_group.talosrg.name
@@ -82,7 +82,7 @@ resource "azurerm_virtual_network" "talosnet" {
 }
 
 resource "azurerm_subnet" "talossubnet" {
-    name = "talossubnet"
+    name = "${var.talos_cluster_name}-subnet"
     resource_group_name = azurerm_resource_group.talosrg.name
     virtual_network_name = azurerm_virtual_network.talosnet.name
     address_prefixes = [ "10.0.1.0/24" ]
@@ -90,7 +90,7 @@ resource "azurerm_subnet" "talossubnet" {
 }
 
 resource "azurerm_network_security_group" "talossg" {
-    name = "talossg"
+    name = "${var.talos_cluster_name}-talossg"
     resource_group_name = azurerm_resource_group.talosrg.name
     location = var.region  
 }
@@ -187,7 +187,7 @@ resource "azurerm_network_security_rule" "traefikhttp" {
 
 resource "azurerm_public_ip" "talos-public-ip" {
     count = length(var.publicipname)
-    name = "publicip-${count.index}"
+    name = "${var.talos_cluster_name}-publicip-${count.index}"
     resource_group_name = azurerm_resource_group.talosrg.name
     allocation_method = "Static"
     location = var.region
@@ -196,7 +196,7 @@ resource "azurerm_public_ip" "talos-public-ip" {
 }
 
 resource "azurerm_public_ip" "talos-public-ip-lb" {
-    name = "talos-public-ip-lb"
+    name = "${var.talos_cluster_name}-talos-public-ip-lb"
     resource_group_name = azurerm_resource_group.talosrg.name
     allocation_method = "Static"
     location = var.region
@@ -205,7 +205,7 @@ resource "azurerm_public_ip" "talos-public-ip-lb" {
 }
 
 resource "azurerm_public_ip" "talos-public-ip-nat" {
-    name = "talos-public-ip-nat"
+    name = "${var.talos_cluster_name}-talos-public-ip-nat"
     resource_group_name = azurerm_resource_group.talosrg.name
     allocation_method = "Static"
     location = var.region
@@ -214,7 +214,7 @@ resource "azurerm_public_ip" "talos-public-ip-nat" {
 }
 
 resource "azurerm_public_ip" "talos-public-ip-traefik" {
-    name = "talos-public-ip-traefik"
+    name = "${var.talos_cluster_name}-talos-public-ip-traefik"
     resource_group_name = azurerm_resource_group.talosrg.name
     allocation_method = "Static"
     location = var.region
@@ -223,39 +223,39 @@ resource "azurerm_public_ip" "talos-public-ip-traefik" {
 }
 
 resource "azurerm_lb" "taloslb" {
-    name = "taloslb"
+    name = "${var.talos_cluster_name}-lb"
     resource_group_name = azurerm_resource_group.talosrg.name
     location = var.region
     sku = "Standard"
 
     frontend_ip_configuration {
-      name = "talosfe"
+      name = "${var.talos_cluster_name}-talosfe"
       public_ip_address_id = azurerm_public_ip.talos-public-ip-lb.id
     }
   
 }
 
 resource "azurerm_lb" "traefiklb" {
-    name = "traefiklb"
+    name = "${var.talos_cluster_name}-traefiklb"
     resource_group_name = azurerm_resource_group.talosrg.name
     location = var.region
     sku = "Standard"
 
     frontend_ip_configuration {
-      name = "traefikfe"
+      name = "${var.talos_cluster_name}-traefikfe"
       public_ip_address_id = azurerm_public_ip.talos-public-ip-traefik.id
     }
   
 }
 
 resource "azurerm_lb_backend_address_pool" "talosbe" {
-  name            = "talosbe"
+  name            = "${var.talos_cluster_name}-talosbe"
   loadbalancer_id = azurerm_lb.taloslb.id
   depends_on = [ azurerm_lb.taloslb ]
 }
 
 resource "azurerm_lb_backend_address_pool" "traefikbe" {
-  name            = "traefikbe"
+  name            = "${var.talos_cluster_name}-traefikbe"
   loadbalancer_id = azurerm_lb.traefiklb.id
   depends_on = [ azurerm_lb.traefiklb ]
 }
@@ -263,7 +263,7 @@ resource "azurerm_lb_backend_address_pool" "traefikbe" {
 resource "azurerm_network_interface_backend_address_pool_association" "lbbackendassociation" {
   count = length(var.nics)
   network_interface_id = element( azurerm_network_interface.nics[*].id, count.index % 4)
-  ip_configuration_name = "config-${count.index}"
+  ip_configuration_name = "${var.talos_cluster_name}-config-${count.index}"
   backend_address_pool_id = azurerm_lb_backend_address_pool.talosbe.id
   
 }
@@ -271,7 +271,7 @@ resource "azurerm_network_interface_backend_address_pool_association" "lbbackend
 resource "azurerm_network_interface_backend_address_pool_association" "traefikbeassociation" {
   count = length(var.workernics)
   network_interface_id = element( azurerm_network_interface.workernics[*].id, count.index % 4)
-  ip_configuration_name = "workerconfig-${count.index}"
+  ip_configuration_name = "${var.talos_cluster_name}-workerconfig-${count.index}"
   backend_address_pool_id = azurerm_lb_backend_address_pool.traefikbe.id
   
 }
@@ -303,7 +303,7 @@ resource "azurerm_lb_rule" "talos-6443" {
   protocol                       = "Tcp"
   frontend_port                  = 6443
   backend_port                   = 6443
-  frontend_ip_configuration_name = "talosfe"
+  frontend_ip_configuration_name = "${var.talos_cluster_name}-talosfe"
   backend_address_pool_ids = [ azurerm_lb_backend_address_pool.talosbe.id ]
   
   probe_id = azurerm_lb_probe.talos-lb-health.id
@@ -315,7 +315,7 @@ resource "azurerm_lb_rule" "traefik-443" {
   protocol                       = "Tcp"
   frontend_port                  = 443
   backend_port                   = var.traefikhttpsport
-  frontend_ip_configuration_name = "traefikfe"
+  frontend_ip_configuration_name = "${var.talos_cluster_name}-traefikfe"
   backend_address_pool_ids = [ azurerm_lb_backend_address_pool.traefikbe.id ]
   
   probe_id = azurerm_lb_probe.traefik-443-health.id
@@ -327,7 +327,7 @@ resource "azurerm_lb_rule" "traefik-80" {
   protocol                       = "Tcp"
   frontend_port                  = 80
   backend_port                   = var.traefikhttpport
-  frontend_ip_configuration_name = "traefikfe"
+  frontend_ip_configuration_name = "${var.talos_cluster_name}-traefikfe"
   backend_address_pool_ids = [ azurerm_lb_backend_address_pool.traefikbe.id ]
   
   probe_id = azurerm_lb_probe.traefik-80-health.id
@@ -335,14 +335,14 @@ resource "azurerm_lb_rule" "traefik-80" {
 
 resource "azurerm_network_interface" "nics" {
   count             = length(var.nics)
-  name              = "nic-${count.index}"
+  name              = "${var.talos_cluster_name}-nic-${count.index}"
   location          = var.region
   resource_group_name = azurerm_resource_group.talosrg.name
 
 
   ip_configuration {
     private_ip_address_allocation = "Dynamic"
-    name            = "config-${count.index}"
+    name            = "${var.talos_cluster_name}-config-${count.index}"
     subnet_id       = azurerm_subnet.talossubnet.id
     private_ip_address = element(var.nics, count.index)
     public_ip_address_id = element(azurerm_public_ip.talos-public-ip[*].id, count.index % 4)
@@ -352,14 +352,14 @@ resource "azurerm_network_interface" "nics" {
 
 resource "azurerm_network_interface" "workernics" {
   count             = length(var.workernics)
-  name              = "workernic-${count.index}"
+  name              = "${var.talos_cluster_name}-workernic-${count.index}"
   location          = var.region
   resource_group_name = azurerm_resource_group.talosrg.name
 
 
   ip_configuration {
     private_ip_address_allocation = "Dynamic"
-    name            = "workerconfig-${count.index}"
+    name            = "${var.talos_cluster_name}-workerconfig-${count.index}"
     subnet_id       = azurerm_subnet.talossubnet.id
     private_ip_address = element(var.nics, count.index)
     
@@ -367,7 +367,7 @@ resource "azurerm_network_interface" "workernics" {
 }
 
 resource "azurerm_availability_set" "talosas" {
-    name = "talosas"
+    name = "${var.talos_cluster_name}-talosas"
     location = azurerm_resource_group.talosrg.location
     resource_group_name = azurerm_resource_group.talosrg.name
     managed = true
@@ -387,7 +387,7 @@ resource "azurerm_network_interface_security_group_association" "networkinterfac
 }
 
 resource "azurerm_nat_gateway" "talosnat" {
-  name                = "worker-node-nat"
+  name                = "${var.talos_cluster_name}-worker-node-nat"
   location            = var.region
   resource_group_name = azurerm_resource_group.talosrg.name
 }
@@ -425,7 +425,7 @@ data "local_file" "workerfile" {
 
 resource "azurerm_virtual_machine" "talosmaster" {
     count = length(var.mastercount)
-    name = "talosmaster-${count.index}"
+    name = "${var.talos_cluster_name}-talosmaster-${count.index}"
     resource_group_name = azurerm_resource_group.talosrg.name
     location = var.region
     vm_size = var.instancetype
@@ -435,7 +435,7 @@ resource "azurerm_virtual_machine" "talosmaster" {
     }
 
     os_profile {
-      computer_name  = "talosmaster-${count.index}"
+      computer_name  = "${var.talos_cluster_name}-talosmaster-${count.index}"
       admin_username = "talos"
       admin_password = "Talos@1234"
       custom_data = data.local_file.controllerfile.content
@@ -452,7 +452,7 @@ resource "azurerm_virtual_machine" "talosmaster" {
       id = "/subscriptions/7bccafd3-c548-4b45-837d-fb7dc81167b6/resourceGroups/talos-image/providers/Microsoft.Compute/images/talos"
     }
     storage_os_disk {
-    name              = "talosmaster-${count.index}"
+    name              = "${var.talos_cluster_name}-talosmaster-${count.index}"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
@@ -475,7 +475,7 @@ resource "azurerm_virtual_machine" "talosmaster" {
 
 resource "azurerm_virtual_machine" "talosworker" {
     count = length(var.workercount)
-    name = "talosworker-${count.index}"
+    name = "${var.talos_cluster_name}-talosworker-${count.index}"
     resource_group_name = azurerm_resource_group.talosrg.name
     location = var.region
     vm_size = var.instancetype
@@ -486,7 +486,7 @@ resource "azurerm_virtual_machine" "talosworker" {
     }
     
     os_profile {
-      computer_name  = "talosworker-${count.index}"
+      computer_name  = "${var.talos_cluster_name}-talosworker-${count.index}"
       admin_username = "talos"
       admin_password = "Talos@1234"
       custom_data = data.local_file.workerfile.content
@@ -503,7 +503,7 @@ resource "azurerm_virtual_machine" "talosworker" {
     }
 
     storage_os_disk {
-    name              = "talosworker-${count.index}"
+    name              = "${var.talos_cluster_name}-talosworker-${count.index}"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
