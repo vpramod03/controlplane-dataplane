@@ -44,3 +44,23 @@ variable "configfolderpath" {
 variable "talosctlfolderpath" {
     description = "home folder path for capten cli dir"  
 }
+
+variable "talosrgname" {
+    description = "talos resourcegroup name"
+}
+
+variable "storagergname" {
+    description = "storage resourcegroup name"
+}
+
+variable "storage_account_name" {
+    description = "stoarge accountname for talosimage and diagnostics"
+}
+
+variable "talos_imagecont_name" {
+    description = "talosimage container name"
+}
+
+variable "talos_cluster_name" {
+    description = "talosvnet name"
+}
