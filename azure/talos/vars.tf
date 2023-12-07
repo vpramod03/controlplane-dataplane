@@ -33,6 +33,11 @@ variable "traefikhttpport" {
     description = "Name of the traefik 80 port target group"
 }
 
+variable "nats-client-port" {
+    description = "Name of the nats-client-port 4222 port target group"
+}
+
+
 variable "traefikhttpsport" {
     description = "Name of the traefik 443 port target group"
 }
