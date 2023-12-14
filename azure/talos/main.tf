@@ -443,7 +443,7 @@ resource "azurerm_virtual_machine" "talosmaster" {
 
 #    storage_data_disk {
 #      name = "talosstoragedata"
-#      disk_size_gb = "20"
+#      disk_size_gb = "100"
 #      lun = "1"
 #      create_option = "Empty"
 #    }
@@ -456,7 +456,7 @@ resource "azurerm_virtual_machine" "talosmaster" {
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
-    disk_size_gb = "20"
+    disk_size_gb = "100"
     }
 
     os_profile_linux_config {
@@ -507,7 +507,7 @@ resource "azurerm_virtual_machine" "talosworker" {
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
-    disk_size_gb = "20"
+    disk_size_gb = "100"
     }
     availability_set_id = azurerm_availability_set.talosas.id
     network_interface_ids = [ element(azurerm_network_interface.workernics[*].id, count.index ) ]
