@@ -297,6 +297,13 @@ resource "azurerm_lb_probe" "traefik-80-health" {
   protocol        = "Tcp"
 }
 
+resource "azurerm_lb_probe" "nats-4222-health" {
+  loadbalancer_id = azurerm_lb.traefiklb.id
+  name            = "nats-4222-health"
+  port            = 4222
+  protocol        = "Tcp"
+}
+
 resource "azurerm_lb_rule" "talos-6443" {
   loadbalancer_id                = azurerm_lb.taloslb.id
   name                           = "talos-6443"
@@ -331,6 +338,18 @@ resource "azurerm_lb_rule" "traefik-80" {
   backend_address_pool_ids = [ azurerm_lb_backend_address_pool.traefikbe.id ]
   
   probe_id = azurerm_lb_probe.traefik-80-health.id
+}
+
+resource "azurerm_lb_rule" "nats-4222" {
+  loadbalancer_id                = azurerm_lb.traefiklb.id
+  name                           = "nats-4222"
+  protocol                       = "Tcp"
+  frontend_port                  = 4222
+  backend_port                   = var.nats-client-port
+  frontend_ip_configuration_name = "traefikfe "
+  backend_address_pool_ids = [ azurerm_lb_backend_address_pool.traefikbe.id ]
+  
+  probe_id = azurerm_lb_probe.nats-4222-health.id
 }
 
 resource "azurerm_network_interface" "nics" {
