@@ -345,7 +345,7 @@ resource "azurerm_lb_rule" "nats-4222" {
   name                           = "nats-4222"
   protocol                       = "Tcp"
   frontend_port                  = 4222
-  backend_port                   = var.nats-client-port
+  backend_port                   = var.nats_client_port
   frontend_ip_configuration_name = "traefikfe "
   backend_address_pool_ids = [ azurerm_lb_backend_address_pool.traefikbe.id ]
   
