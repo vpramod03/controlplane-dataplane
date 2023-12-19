@@ -90,6 +90,8 @@ module "security_group" {
 
 module "alb" {
   source  = "terraform-aws-modules/alb/aws"
+  
+  version = "8.7.0"
 
   name = var.albname
 
@@ -310,7 +312,7 @@ resource "null_resource" "bootstrap_etcd" {
     }
     
     provisioner "local-exec" {
-        command = "echo 'LoadBalancerHost = \"${aws_lb.traefik.dns_name}\"' > ${var.configfolderpath}/capten-lb-endpoint.yaml"
+        command = "echo 'LoadBalancerHost: \"${aws_lb.traefik.dns_name}\"' > ${var.configfolderpath}/capten-lb-endpoint.yaml"
     }
     depends_on = [ aws_instance.talos_master_instance ]
 

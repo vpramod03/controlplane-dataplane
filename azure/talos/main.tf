@@ -297,6 +297,13 @@ resource "azurerm_lb_probe" "traefik-80-health" {
   protocol        = "Tcp"
 }
 
+resource "azurerm_lb_probe" "nats-4222-health" {
+  loadbalancer_id = azurerm_lb.traefiklb.id
+  name            = "nats-4222-health"
+  port            = 4222
+  protocol        = "Tcp"
+}
+
 resource "azurerm_lb_rule" "talos-6443" {
   loadbalancer_id                = azurerm_lb.taloslb.id
   name                           = "talos-6443"
@@ -331,6 +338,18 @@ resource "azurerm_lb_rule" "traefik-80" {
   backend_address_pool_ids = [ azurerm_lb_backend_address_pool.traefikbe.id ]
   
   probe_id = azurerm_lb_probe.traefik-80-health.id
+}
+
+resource "azurerm_lb_rule" "nats-4222" {
+  loadbalancer_id                = azurerm_lb.traefiklb.id
+  name                           = "nats-4222"
+  protocol                       = "Tcp"
+  frontend_port                  = 4222
+  backend_port                   = var.nats_client_port
+  frontend_ip_configuration_name = "traefikfe "
+  backend_address_pool_ids = [ azurerm_lb_backend_address_pool.traefikbe.id ]
+  
+  probe_id = azurerm_lb_probe.nats-4222-health.id
 }
 
 resource "azurerm_network_interface" "nics" {
@@ -528,12 +547,12 @@ resource "null_resource" "bootstrap_etcd" {
       
     }
     provisioner "local-exec" {
-        command = "${var.talosctlfolderpath}/talosctl --talosconfig scripts/talosconfig kubeconfig ${var.configfolderpath}"
+        command = "${var.talosctlfolderpath}/talosctl --talosconfig scripts/talosconfig kubeconfig ${var.configfolderpath} --nodes ${azurerm_public_ip.talos-public-ip[0].ip_address}"
       
     }
     provisioner "local-exec" {
-        command = "echo 'LoadBalancerHost = \"${azurerm_public_ip.talos-public-ip-traefik.ip_address}\"' > ${var.configfolderpath}/capten-lb-endpoint.yaml"
-    }
+        command = "echo 'LoadBalancerHost: \"${azurerm_public_ip.talos-public-ip-traefik.ip_address}\"' > ${var.configfolderpath}/capten-lb-endpoint.yaml"
+    } 
     depends_on = [ azurerm_virtual_machine.talosmaster  ]
 
 }
