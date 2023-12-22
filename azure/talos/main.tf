@@ -184,6 +184,21 @@ resource "azurerm_network_security_rule" "traefikhttp" {
 
 }
 
+resource "azurerm_network_security_rule" "nats" {
+    name = "${var.talos_cluster_name}-nats"
+    network_security_group_name = azurerm_network_security_group.talossg.name
+    priority = "1007"
+    source_port_range = "*"
+    destination_port_ranges = [ "${var.traefikhttpport}" ]
+    source_address_prefix  = "*"
+    destination_address_prefix  = "*"
+    direction = "Inbound"
+    access = "Allow"
+    resource_group_name = azurerm_resource_group.talosrg.name
+    protocol = "Tcp"
+
+}
+
 resource "azurerm_public_ip" "talos-public-ip" {
     count = length(var.publicipname)
     name = "${var.talos_cluster_name}-publicip-${count.index}"
