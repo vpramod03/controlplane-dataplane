@@ -9,7 +9,6 @@ terraform {
 
 provider "azurerm" {
     features {}
-  
 }
 
 resource "azurerm_resource_group" "storagerg" {
@@ -96,7 +95,7 @@ resource "azurerm_network_security_group" "talossg" {
 }
 
 resource "azurerm_network_security_rule" "apid" {
-    name = "apid"
+    name = "${var.talos_cluster_name}-apid"
     network_security_group_name = azurerm_network_security_group.talossg.name
     priority = "1001"
     source_port_range  = "*"
@@ -111,7 +110,7 @@ resource "azurerm_network_security_rule" "apid" {
 }
 
 resource "azurerm_network_security_rule" "trustd" {
-    name = "trustd"
+    name = "${var.talos_cluster_name}-trustd"
     network_security_group_name = azurerm_network_security_group.talossg.name
     priority = "1002"
     source_port_range = "*"
@@ -126,7 +125,7 @@ resource "azurerm_network_security_rule" "trustd" {
 }
 
 resource "azurerm_network_security_rule" "etcd" {
-    name = "etcd"
+    name = "${var.talos_cluster_name}-etcd"
     network_security_group_name = azurerm_network_security_group.talossg.name
     priority = "1003"
     source_port_range = "*"
@@ -141,7 +140,7 @@ resource "azurerm_network_security_rule" "etcd" {
 }
 
 resource "azurerm_network_security_rule" "kube" {
-    name = "kube"
+    name = "${var.talos_cluster_name}-kube"
     network_security_group_name = azurerm_network_security_group.talossg.name
     priority = "1004"
     source_port_range = "*"
@@ -156,7 +155,7 @@ resource "azurerm_network_security_rule" "kube" {
 }
 
 resource "azurerm_network_security_rule" "traefikhttps" {
-    name = "kube"
+    name = "${var.talos_cluster_name}-traefikhttps"
     network_security_group_name = azurerm_network_security_group.talossg.name
     priority = "1005"
     source_port_range = "*"
@@ -171,7 +170,7 @@ resource "azurerm_network_security_rule" "traefikhttps" {
 }
 
 resource "azurerm_network_security_rule" "traefikhttp" {
-    name = "kube"
+    name = "${var.talos_cluster_name}-traefikhttp"
     network_security_group_name = azurerm_network_security_group.talossg.name
     priority = "1006"
     source_port_range = "*"
@@ -278,35 +277,35 @@ resource "azurerm_network_interface_backend_address_pool_association" "traefikbe
 
 resource "azurerm_lb_probe" "talos-lb-health" {
   loadbalancer_id = azurerm_lb.taloslb.id
-  name            = "talos-lb-health"
+  name            = "${var.talos_cluster_name}-talos-lb-health"
   port            = 6443
   protocol        = "Tcp"
 }
 
 resource "azurerm_lb_probe" "traefik-443-health" {
   loadbalancer_id = azurerm_lb.traefiklb.id
-  name            = "traefik-443-health"
+  name            = "${var.talos_cluster_name}-traefik-443-health"
   port            = 443
   protocol        = "Tcp"
 }
 
 resource "azurerm_lb_probe" "traefik-80-health" {
   loadbalancer_id = azurerm_lb.traefiklb.id
-  name            = "traefik-80-health"
+  name            = "${var.talos_cluster_name}-traefik-80-health"
   port            = 80
   protocol        = "Tcp"
 }
 
 resource "azurerm_lb_probe" "nats-4222-health" {
   loadbalancer_id = azurerm_lb.traefiklb.id
-  name            = "nats-4222-health"
+  name            = "${var.talos_cluster_name}-nats-4222-health"
   port            = 4222
   protocol        = "Tcp"
 }
 
 resource "azurerm_lb_rule" "talos-6443" {
   loadbalancer_id                = azurerm_lb.taloslb.id
-  name                           = "talos-6443"
+  name                           = "${var.talos_cluster_name}-talos-6443"
   protocol                       = "Tcp"
   frontend_port                  = 6443
   backend_port                   = 6443
@@ -318,7 +317,7 @@ resource "azurerm_lb_rule" "talos-6443" {
 
 resource "azurerm_lb_rule" "traefik-443" {
   loadbalancer_id                = azurerm_lb.traefiklb.id
-  name                           = "traefik-443"
+  name                           = "${var.talos_cluster_name}-traefik-443"
   protocol                       = "Tcp"
   frontend_port                  = 443
   backend_port                   = var.traefikhttpsport
@@ -330,7 +329,7 @@ resource "azurerm_lb_rule" "traefik-443" {
 
 resource "azurerm_lb_rule" "traefik-80" {
   loadbalancer_id                = azurerm_lb.traefiklb.id
-  name                           = "traefik-80"
+  name                           = "${var.talos_cluster_name}-traefik-80"
   protocol                       = "Tcp"
   frontend_port                  = 80
   backend_port                   = var.traefikhttpport
@@ -342,11 +341,11 @@ resource "azurerm_lb_rule" "traefik-80" {
 
 resource "azurerm_lb_rule" "nats-4222" {
   loadbalancer_id                = azurerm_lb.traefiklb.id
-  name                           = "nats-4222"
+  name                           = "${var.talos_cluster_name}-nats-4222"
   protocol                       = "Tcp"
   frontend_port                  = 4222
   backend_port                   = var.nats_client_port
-  frontend_ip_configuration_name = "traefikfe "
+  frontend_ip_configuration_name = "${var.talos_cluster_name}-traefikfe"
   backend_address_pool_ids = [ azurerm_lb_backend_address_pool.traefikbe.id ]
   
   probe_id = azurerm_lb_probe.nats-4222-health.id
