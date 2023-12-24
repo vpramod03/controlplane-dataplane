@@ -261,7 +261,7 @@ resource "azurerm_lb_backend_address_pool" "traefikbe" {
 
 resource "azurerm_network_interface_backend_address_pool_association" "lbbackendassociation" {
   count = length(var.nics)
-  network_interface_id = element( azurerm_network_interface.nics[*].id, count.index % 4)
+  network_interface_id = element( azurerm_network_interface.nics[*].id, count.index % (length(var.nics) + 1)  )
   ip_configuration_name = "${var.talos_cluster_name}-config-${count.index}"
   backend_address_pool_id = azurerm_lb_backend_address_pool.talosbe.id
   
@@ -269,7 +269,7 @@ resource "azurerm_network_interface_backend_address_pool_association" "lbbackend
 
 resource "azurerm_network_interface_backend_address_pool_association" "traefikbeassociation" {
   count = length(var.workernics)
-  network_interface_id = element( azurerm_network_interface.workernics[*].id, count.index % 4)
+  network_interface_id = element( azurerm_network_interface.workernics[*].id, count.index % (length(var.workernics) + 1) )
   ip_configuration_name = "${var.talos_cluster_name}-workerconfig-${count.index}"
   backend_address_pool_id = azurerm_lb_backend_address_pool.traefikbe.id
   
@@ -363,7 +363,7 @@ resource "azurerm_network_interface" "nics" {
     name            = "${var.talos_cluster_name}-config-${count.index}"
     subnet_id       = azurerm_subnet.talossubnet.id
     private_ip_address = element(var.nics, count.index)
-    public_ip_address_id = element(azurerm_public_ip.talos-public-ip[*].id, count.index % 4)
+    public_ip_address_id = element(azurerm_public_ip.talos-public-ip[*].id, count.index % ( length(var.nics) + 1 )  )
     
   }
 }
@@ -393,14 +393,14 @@ resource "azurerm_availability_set" "talosas" {
 }
 
 resource "azurerm_network_interface_security_group_association" "networkinterface_sg_association" {
-  count = length(var.workernics)
-  network_interface_id = element( azurerm_network_interface.nics[*].id, count.index % 4)
+  count = length(var.nics)
+  network_interface_id = element( azurerm_network_interface.nics[*].id, count.index % (length(var.nics) + 1) )
   network_security_group_id = azurerm_network_security_group.talossg.id
 }
 
 resource "azurerm_network_interface_security_group_association" "networkinterface_worker_sg_association" {
   count = length(var.workernics)
-  network_interface_id = element( azurerm_network_interface.workernics[*].id, count.index % 4)
+  network_interface_id = element( azurerm_network_interface.workernics[*].id, count.index % (length(var.workernics)+ 1) )
   network_security_group_id = azurerm_network_security_group.talossg.id
 }
 
