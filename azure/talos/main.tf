@@ -189,7 +189,7 @@ resource "azurerm_network_security_rule" "nats" {
     network_security_group_name = azurerm_network_security_group.talossg.name
     priority = "1007"
     source_port_range = "*"
-    destination_port_ranges = [ "${var.traefikhttpport}" ]
+    destination_port_ranges = [ "${var.nats_client_port}" ]
     source_address_prefix  = "*"
     destination_address_prefix  = "*"
     direction = "Inbound"
