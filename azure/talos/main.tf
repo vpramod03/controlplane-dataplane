@@ -189,7 +189,7 @@ resource "azurerm_network_security_rule" "nats" {
     network_security_group_name = azurerm_network_security_group.talossg.name
     priority = "1007"
     source_port_range = "*"
-    destination_port_ranges = [ "${var.traefikhttpport}" ]
+    destination_port_ranges = [ "${var.nats_client_port}" ]
     source_address_prefix  = "*"
     destination_address_prefix  = "*"
     direction = "Inbound"
@@ -300,21 +300,21 @@ resource "azurerm_lb_probe" "talos-lb-health" {
 resource "azurerm_lb_probe" "traefik-443-health" {
   loadbalancer_id = azurerm_lb.traefiklb.id
   name            = "${var.talos_cluster_name}-traefik-443-health"
-  port            = 443
+  port            = var.traefikhttpsport
   protocol        = "Tcp"
 }
 
 resource "azurerm_lb_probe" "traefik-80-health" {
   loadbalancer_id = azurerm_lb.traefiklb.id
   name            = "${var.talos_cluster_name}-traefik-80-health"
-  port            = 80
+  port            = var.traefikhttpport
   protocol        = "Tcp"
 }
 
 resource "azurerm_lb_probe" "nats-4222-health" {
   loadbalancer_id = azurerm_lb.traefiklb.id
   name            = "${var.talos_cluster_name}-nats-4222-health"
-  port            = 4222
+  port            = var.nats_client_port
   protocol        = "Tcp"
 }
 
