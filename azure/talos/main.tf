@@ -488,7 +488,7 @@ resource "azurerm_virtual_machine" "talosmaster" {
     name              = "${var.talos_cluster_name}-talosmaster-${count.index}"
     caching           = "ReadWrite"
     create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
+    managed_disk_type = "StandardSSD_LRS"
     disk_size_gb = "100"
     }
 
@@ -530,6 +530,7 @@ resource "azurerm_virtual_machine" "talosworker" {
       disk_size_gb = "200"
       lun = "1"
       create_option = "Empty"
+      managed_disk_type = "StandardSSD_LRS"
     }
     storage_image_reference {
       id = "/subscriptions/7bccafd3-c548-4b45-837d-fb7dc81167b6/resourceGroups/talos-image/providers/Microsoft.Compute/images/talos"
@@ -539,7 +540,7 @@ resource "azurerm_virtual_machine" "talosworker" {
     name              = "${var.talos_cluster_name}-talosworker-${count.index}"
     caching           = "ReadWrite"
     create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
+    managed_disk_type = "StandardSSD_LRS"
     disk_size_gb = "100"
     }
     availability_set_id = azurerm_availability_set.talosas.id
