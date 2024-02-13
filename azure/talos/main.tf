@@ -326,7 +326,6 @@ resource "azurerm_lb_rule" "talos-6443" {
   backend_port                   = 6443
   frontend_ip_configuration_name = "${var.talos_cluster_name}-talosfe"
   backend_address_pool_ids = [ azurerm_lb_backend_address_pool.talosbe.id ]
-  
   probe_id = azurerm_lb_probe.talos-lb-health.id
 }
 
@@ -336,6 +335,7 @@ resource "azurerm_lb_rule" "traefik-443" {
   protocol                       = "Tcp"
   frontend_port                  = 443
   backend_port                   = var.traefikhttpsport
+  load_distribution = "SourceIPProtocol"
   frontend_ip_configuration_name = "${var.talos_cluster_name}-traefikfe"
   backend_address_pool_ids = [ azurerm_lb_backend_address_pool.traefikbe.id ]
   
@@ -348,6 +348,7 @@ resource "azurerm_lb_rule" "traefik-80" {
   protocol                       = "Tcp"
   frontend_port                  = 80
   backend_port                   = var.traefikhttpport
+  load_distribution = "SourceIPProtocol"
   frontend_ip_configuration_name = "${var.talos_cluster_name}-traefikfe"
   backend_address_pool_ids = [ azurerm_lb_backend_address_pool.traefikbe.id ]
   
