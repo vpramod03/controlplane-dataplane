@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "=3.0.0"
+      version = ">=3.2.1"
     }
   }
 }
@@ -286,7 +286,7 @@ resource "azurerm_lb_backend_address_pool" "traefikbe" {
 #   count = length(var.workernics)
 #   network_interface_id = element( azurerm_network_interface.workernics[*].id, count.index % (length(var.workernics) + 1) )
 #   ip_configuration_name = "${var.talos_cluster_name}-workerconfig-${count.index}"
-#   backend_address_pool_id = azurerm_lb_backend_address_pool.traefikbe.id
+#   backend_address_pool_id = azurerm_lb_backend_address_pool.traefikbe.
   
 # }
 
@@ -294,6 +294,13 @@ resource "azurerm_lb_probe" "talos-lb-health" {
   loadbalancer_id = azurerm_lb.taloslb.id
   name            = "${var.talos_cluster_name}-talos-lb-health"
   port            = 6443
+  protocol        = "Tcp"
+}
+
+resource "azurerm_lb_probe" "talos-api-lb-health" {
+  loadbalancer_id = azurerm_lb.taloslb.id
+  name            = "${var.talos_cluster_name}-talos-api-lb-health"
+  port            = 50000
   protocol        = "Tcp"
 }
 
@@ -327,6 +334,17 @@ resource "azurerm_lb_rule" "talos-6443" {
   frontend_ip_configuration_name = "${var.talos_cluster_name}-talosfe"
   backend_address_pool_ids = [ azurerm_lb_backend_address_pool.talosbe.id ]
   probe_id = azurerm_lb_probe.talos-lb-health.id
+}
+
+resource "azurerm_lb_rule" "talos-50000" {
+  loadbalancer_id                = azurerm_lb.taloslb.id
+  name                           = "${var.talos_cluster_name}-talos-50000"
+  protocol                       = "Tcp"
+  frontend_port                  = 50000
+  backend_port                   = 50000
+  frontend_ip_configuration_name = "${var.talos_cluster_name}-talosfe"
+  backend_address_pool_ids = [ azurerm_lb_backend_address_pool.talosbe.id ]
+  probe_id = azurerm_lb_probe.talos-api-lb-health.id
 }
 
 resource "azurerm_lb_rule" "traefik-443" {
@@ -468,7 +486,12 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "talosmaster-scalable"
 
 
   os_profile {
-    custom_data = data.local_file.controllerfile.content
+    custom_data = data.local_file.controllerfile.content_base64
+    linux_configuration {
+      admin_username = "talos"
+      admin_password = "Talos@123"
+      disable_password_authentication = false
+    }
   }
   network_interface {
     name    =  "${var.masterscalesetname}-network-interface"
@@ -513,10 +536,6 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "talosmaster-static" {
   platform_fault_domain_count = 1
   sku_name = var.instancetype
 
-
-  os_profile {
-    custom_data = data.local_file.controllerfile.content
-  }
   network_interface {
     name    = "${var.masterstaticname}-network-Interface"
     primary = true
@@ -529,10 +548,18 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "talosmaster-static" {
       public_ip_address {
         name = "${var.masterstaticname}-public-ip"
       }
-      load_balancer_backend_address_pool_ids = [ "azurerm_lb_backend_address_pool.talosbe.id" ]
+      load_balancer_backend_address_pool_ids = [ "/subscriptions/${var.subscription_id}/resourceGroups/${var.talosrgname}/providers/Microsoft.Network/loadBalancers/${azurerm_lb.taloslb.name}/backendAddressPools/${azurerm_lb_backend_address_pool.talosbe.name}" ]
     }
   }
   
+  os_profile {
+    custom_data = data.local_file.controllerfile.content_base64
+    linux_configuration {
+      admin_username = "talos"
+      admin_password = "Talos@123"
+      disable_password_authentication = false
+    }
+  }
   os_disk {
     caching        = "ReadWrite"
     storage_account_type = "StandardSSD_LRS" 
@@ -573,7 +600,12 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "talosworker-static" {
   }
   
   os_profile {
-    custom_data = data.local_file.workerfile.content
+    custom_data = data.local_file.workerfile.content_base64
+    linux_configuration {
+      admin_username = "talos"
+      admin_password = "Talos@123"
+      disable_password_authentication = false
+    }
   }
   os_disk {
     caching        = "ReadWrite"
@@ -611,12 +643,17 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "talosworker-scalable"
       name      = "${var.wokerscalesetname}-ip-conf"
       primary   = true
       subnet_id = azurerm_subnet.talossubnet.id
-      load_balancer_backend_address_pool_ids =  [ "azurerm_lb_backend_address_pool.traefikbe.id" ]
+      load_balancer_backend_address_pool_ids =  [ "/subscriptions/${var.subscription_id}/resourceGroups/${var.talosrgname}/providers/Microsoft.Network/loadBalancers/${azurerm_lb.traefiklb.name}/backendAddressPools/${azurerm_lb_backend_address_pool.traefikbe.name}" ]
     }
   }
   
   os_profile {
-    custom_data = data.local_file.workerfile.content
+    custom_data = data.local_file.workerfile.content_base64
+    linux_configuration {
+      admin_username = "talos"
+      admin_password = "Talos@123"
+      disable_password_authentication = false
+    }
   }
   os_disk {
     caching        = "ReadWrite"
