@@ -85,3 +85,7 @@ variable "workerstaticname" {
 variable "masterscalesetname" {
     description = "talos master scaleset name"
 }
+
+variable "subscription_id" {
+    description = "subscription id"
+}
