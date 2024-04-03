@@ -46,7 +46,7 @@ echo ${dnsname}
 echo ${port}
 echo ${talosctlpath}
 
-${talosctlpath}/talosctl gen config talosconfig-userdata https://${dnsname}:${port} --with-examples=false --with-docs=false --output-dir scripts/ --config-patch @scripts/patch.yaml --force
+${talosctlpath}/talosctl gen config talosconfig-userdata https://${dnsname}:${port} --with-examples=false --with-docs=false --output-dir scripts/ --config-patch @scripts/patch.yaml  --config-patch '[{"op": "add", "path": "/machine/certSANs", "value": ['${dnsname}']}]' --force
 ${talosctlpath}/talosctl validate --config scripts/controlplane.yaml --mode cloud
 if [ $? -eq 1 ]
 then

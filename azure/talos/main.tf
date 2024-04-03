@@ -674,6 +674,8 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "talosworker-scalable"
   source_image_id = "/subscriptions/7bccafd3-c548-4b45-837d-fb7dc81167b6/resourceGroups/talos-image/providers/Microsoft.Compute/images/talos"
 }
 
+
+
 resource "null_resource" "bootstrap_etcd" {
     provisioner "local-exec" {
         command = "/bin/bash scripts/bootstrapetcd.sh ${azurerm_public_ip.talos-public-ip-lb.ip_address} ${var.talosctlfolderpath}"
@@ -687,6 +689,6 @@ resource "null_resource" "bootstrap_etcd" {
         command = "echo 'LoadBalancerHost: \"${azurerm_public_ip.talos-public-ip-traefik.ip_address}\"' > ${var.configfolderpath}/capten-lb-endpoint.yaml"
     } 
     depends_on = [ azurerm_orchestrated_virtual_machine_scale_set.talosmaster-static  ]
-
+    
 }
 
