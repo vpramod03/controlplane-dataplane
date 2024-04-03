@@ -89,3 +89,16 @@ variable "masterscalesetname" {
 variable "subscription_id" {
     description = "subscription id"
 }
+
+variable "tfstatergname" {
+    description = "resourcegroup where tfstate to be stored"  
+}
+
+variable "tfstatesaname" {
+    description = "storage account name of tfstate"
+  
+}
+
+variable "tfstatecontname" {
+    description = "tfstate storage account container name"
+}
