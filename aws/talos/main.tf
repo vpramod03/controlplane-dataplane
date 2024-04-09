@@ -215,6 +215,16 @@ resource "aws_lb_target_group" "traefik-tg-443" {
   
 }
 
+resource "aws_lb_target_group" "nats-tg-4222" {
+    name = var.nats_tg_4222_name
+    port = var.nats_client_port
+    protocol = "TCP"
+    target_type = "ip"
+    vpc_id = module.vpc.vpc_id
+  
+}
+
+
 resource "aws_lb_target_group_attachment" "registertarget" {
 
     count = var.mastercount
@@ -237,6 +247,15 @@ resource "aws_lb_target_group_attachment" "registertarget-traefik-443" {
 
     count = var.mastercount
     target_group_arn = aws_lb_target_group.traefik-tg-443.arn
+    target_id = "${element(split(",", join(",", aws_instance.talos_worker_instance.*.private_ip)), count.index)}" 
+    depends_on = [ aws_instance.talos_worker_instance ]  
+
+}
+
+resource "aws_lb_target_group_attachment" "registertarget-nats-4222" {
+
+    count = var.mastercount
+    target_group_arn = aws_lb_target_group.nats.tg.4222.arn
     target_id = "${element(split(",", join(",", aws_instance.talos_worker_instance.*.private_ip)), count.index)}" 
     depends_on = [ aws_instance.talos_worker_instance ]  
 
@@ -279,6 +298,17 @@ resource "aws_alb_listener" "traefik-listener-443" {
     default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.traefik-tg-443.arn
+  }
+  
+}
+
+resource "aws_alb_listener" "nats-listener-4222" {
+    load_balancer_arn = aws_lb.traefiklb.arn
+    port = 4222
+    protocol = "TCP"
+    default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.nats-tg-4222.arn
   }
   
 }
