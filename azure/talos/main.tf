@@ -5,12 +5,8 @@ terraform {
       version = ">=3.2.1"
     }
   }
-  backend "azurerm" {
-      resource_group_name  = "captentfstate"
-      storage_account_name = "captentfstate20050"
-      container_name       = "captentfstate"
-      key                  = "terraform.tfstate"
-  }
+  backend "azurerm" {}
+
 }
 
 provider "azurerm" {
@@ -317,12 +313,12 @@ resource "azurerm_lb_probe" "traefik-443-health" {
   protocol        = "Tcp"
 }
 
-resource "azurerm_lb_probe" "traefik-80-health" {
-  loadbalancer_id = azurerm_lb.traefiklb.id
-  name            = "${var.talos_cluster_name}-traefik-80-health"
-  port            = var.traefikhttpport
-  protocol        = "Tcp"
-}
+# resource "azurerm_lb_probe" "traefik-80-health" {
+#   loadbalancer_id = azurerm_lb.traefiklb.id
+#   name            = "${var.talos_cluster_name}-traefik-80-health"
+#   port            = var.traefikhttpport
+#   protocol        = "Tcp"
+# }
 
 resource "azurerm_lb_probe" "nats-4222-health" {
   loadbalancer_id = azurerm_lb.traefiklb.id
@@ -366,18 +362,18 @@ resource "azurerm_lb_rule" "traefik-443" {
   probe_id = azurerm_lb_probe.traefik-443-health.id
 }
 
-resource "azurerm_lb_rule" "traefik-80" {
-  loadbalancer_id                = azurerm_lb.traefiklb.id
-  name                           = "${var.talos_cluster_name}-traefik-80"
-  protocol                       = "Tcp"
-  frontend_port                  = 80
-  backend_port                   = var.traefikhttpport
-  load_distribution = "SourceIPProtocol"
-  frontend_ip_configuration_name = "${var.talos_cluster_name}-traefikfe"
-  backend_address_pool_ids = [ azurerm_lb_backend_address_pool.traefikbe.id ]
+# resource "azurerm_lb_rule" "traefik-80" {
+#   loadbalancer_id                = azurerm_lb.traefiklb.id
+#   name                           = "${var.talos_cluster_name}-traefik-80"
+#   protocol                       = "Tcp"
+#   frontend_port                  = 80
+#   backend_port                   = var.traefikhttpport
+#   load_distribution = "SourceIPProtocol"
+#   frontend_ip_configuration_name = "${var.talos_cluster_name}-traefikfe"
+#   backend_address_pool_ids = [ azurerm_lb_backend_address_pool.traefikbe.id ]
   
-  probe_id = azurerm_lb_probe.traefik-80-health.id
-}
+#   probe_id = azurerm_lb_probe.traefik-80-health.id
+# }
 
 resource "azurerm_lb_rule" "nats-4222" {
   loadbalancer_id                = azurerm_lb.traefiklb.id
