@@ -197,14 +197,14 @@ resource "aws_lb_target_group" "talos-tg" {
   
 }
 
-resource "aws_lb_target_group" "traefik-tg-80" {
-    name = var.traefik_tg_80_name
-    port = var.traefikhttpport
-    protocol = "TCP"
-    target_type = "ip"
-    vpc_id = module.vpc.vpc_id
+# resource "aws_lb_target_group" "traefik-tg-80" {
+#     name = var.traefik_tg_80_name
+#     port = var.traefikhttpport
+#     protocol = "TCP"
+#     target_type = "ip"
+#     vpc_id = module.vpc.vpc_id
   
-}
+# }
 
 resource "aws_lb_target_group" "traefik-tg-443" {
     name = var.traefik_tg_443_name
@@ -224,14 +224,14 @@ resource "aws_lb_target_group_attachment" "registertarget" {
 
 }
 
-resource "aws_lb_target_group_attachment" "registertarget-traefik-80" {
+# resource "aws_lb_target_group_attachment" "registertarget-traefik-80" {
 
-    count = var.workercount
-    target_group_arn = aws_lb_target_group.traefik-tg-80.arn
-    target_id = "${element(split(",", join(",", aws_instance.talos_worker_instance.*.private_ip)), count.index)}" 
-    depends_on = [ aws_instance.talos_worker_instance ]  
+#     count = var.workercount
+#     target_group_arn = aws_lb_target_group.traefik-tg-80.arn
+#     target_id = "${element(split(",", join(",", aws_instance.talos_worker_instance.*.private_ip)), count.index)}" 
+#     depends_on = [ aws_instance.talos_worker_instance ]  
 
-}
+# }
 
 resource "aws_lb_target_group_attachment" "registertarget-traefik-443" {
 
@@ -283,16 +283,16 @@ resource "aws_alb_listener" "traefik-listener-443" {
   
 }
 
-resource "aws_alb_listener" "traefik-listener-80" {
-    load_balancer_arn = aws_lb.traefik.arn
-    port = 80
-    protocol = "TCP"
-    default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.traefik-tg-80.arn
-  }
+# resource "aws_alb_listener" "traefik-listener-80" {
+#     load_balancer_arn = aws_lb.traefik.arn
+#     port = 80
+#     protocol = "TCP"
+#     default_action {
+#     type             = "forward"
+#     target_group_arn = aws_lb_target_group.traefik-tg-80.arn
+#   }
   
-}
+# }
 
 resource "null_resource" "bootstrap_etcd" {
     provisioner "local-exec" {
