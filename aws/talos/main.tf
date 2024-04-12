@@ -245,7 +245,7 @@ resource "aws_lb_target_group_attachment" "registertarget-traefik-80" {
 
 resource "aws_lb_target_group_attachment" "registertarget-traefik-443" {
 
-    count = var.mastercount
+    count = var.workercount
     target_group_arn = aws_lb_target_group.traefik-tg-443.arn
     target_id = "${element(split(",", join(",", aws_instance.talos_worker_instance.*.private_ip)), count.index)}" 
     depends_on = [ aws_instance.talos_worker_instance ]  
