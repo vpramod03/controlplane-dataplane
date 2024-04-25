@@ -255,7 +255,7 @@ resource "aws_lb_target_group_attachment" "registertarget-traefik-443" {
 resource "aws_lb_target_group_attachment" "registertarget-nats-4222" {
 
     count = var.mastercount
-    target_group_arn = aws_lb_target_group.nats.tg.4222.arn
+    target_group_arn = aws_lb_target_group.nats-tg-4222.arn
     target_id = "${element(split(",", join(",", aws_instance.talos_worker_instance.*.private_ip)), count.index)}" 
     depends_on = [ aws_instance.talos_worker_instance ]  
 
@@ -303,7 +303,7 @@ resource "aws_alb_listener" "traefik-listener-443" {
 }
 
 resource "aws_alb_listener" "nats-listener-4222" {
-    load_balancer_arn = aws_lb.traefiklb.arn
+    load_balancer_arn = aws_lb.traefik.arn
     port = 4222
     protocol = "TCP"
     default_action {
