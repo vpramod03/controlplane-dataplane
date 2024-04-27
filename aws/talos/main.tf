@@ -125,6 +125,11 @@ data "local_file" "workerfile" {
   depends_on = [ null_resource.createtalosconfig ]
 }
 
+resource "aws_placement_group" "talosplacemnentgroup" {
+  name     = "talosplacemnentgroup"
+  strategy = "cluster"
+}
+
 resource "aws_instance" talos_master_instance {
 
     count = var.mastercount
