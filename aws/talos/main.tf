@@ -136,6 +136,16 @@ resource "aws_launch_configuration" "talosmaster" {
   instance_type = var.instance_type
 }
 
+resource "aws_lb" "talosapi" {
+  name               = "talosapi"
+  internal           = false
+  load_balancer_type = "network"
+  subnets            = [for subnet in aws_subnet.public : subnet.id]
+
+  enable_deletion_protection = true
+
+}
+
 resource "aws_autoscaling_group" "talosmaster-static" {
   name                      = "talosmaster-static"
   max_size                  = 20
@@ -146,6 +156,7 @@ resource "aws_autoscaling_group" "talosmaster-static" {
   force_delete              = true
   placement_group           = aws_placement_group.talosplacemnentgroup.id
   launch_configuration      = aws_launch_configuration.talosmaster.name
+  load_balancers = aws_lb.talosapi.arn
 
 
   timeouts {
