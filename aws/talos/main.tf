@@ -255,6 +255,15 @@ resource "aws_lb_target_group" "talos-tg" {
   
 }
 
+resource "aws_lb_target_group" "talos-api" {
+    name = "talosapi"
+    port = 500000
+    protocol = "TCP"
+    target_type = "ip"
+    vpc_id = module.vpc.vpc_id
+  
+}
+
 # resource "aws_lb_target_group" "traefik-tg-80" {
 #     name = var.traefik_tg_80_name
 #     port = var.traefikhttpport
@@ -282,6 +291,14 @@ resource "aws_lb_target_group_attachment" "registertarget" {
 
 }
 
+resource "aws_lb_target_group_attachment" "talosapi" {
+
+    count = var.mastercount
+    target_group_arn = aws_lb_target_group.talos-tg.arn
+    target_id = "${element(split(",", join(",", aws_instance.talos_master_instance.*.private_ip)), count.index)}" 
+    depends_on = [ aws_instance.talos_master_instance ]  
+
+}
 # resource "aws_lb_target_group_attachment" "registertarget-traefik-80" {
 
 #     count = var.workercount
